@@ -11,7 +11,11 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class LoginDTO {
-	private String username;
-	private String password;
+public class LoginResponseDTO {
+	private String access_token;
+	private String refresh_token;
+	private String expires_in;
+	private String refresh_expires_in;
+	private String token_type;
+
 }

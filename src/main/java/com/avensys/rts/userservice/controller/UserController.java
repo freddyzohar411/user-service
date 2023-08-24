@@ -5,17 +5,23 @@ import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.avensys.rts.userservice.entity.RoleEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
+import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
 import com.avensys.rts.userservice.payload.LoginDTO;
+import com.avensys.rts.userservice.payload.LoginResponseDTO;
+import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.repository.RoleRepository;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.service.UserService;
@@ -36,18 +42,17 @@ public class UserController {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	@Autowired
+	private AuthenticationManager authenticationManager;
+
 	@PostMapping("/signin")
-	public ResponseEntity<String> authenticateUser(@RequestBody LoginDTO loginDTO) {
-		try {
-			UserDetails user = userService.loadUserByUsername(loginDTO.getUsernameOrEmail());
-			System.out.println("test "+user.getPassword()+" "+passwordEncoder.encode(loginDTO.getPassword()));
-			if (user.getPassword().equals(passwordEncoder.encode(loginDTO.getPassword()))) {
-				return new ResponseEntity<>("User signed-in successfully!.", HttpStatus.OK);
-			} else {
-				System.out.println("test username "+user.getPassword()+" "+passwordEncoder.encode(loginDTO.getPassword()));
-				return new ResponseEntity<>("Invalid username/password.", HttpStatus.UNAUTHORIZED);
-			}
-		} catch (UsernameNotFoundException e) {
+	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
+		Authentication authenticate = authenticationManager
+				.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
+		if (authenticate.isAuthenticated()) {
+			LoginResponseDTO response = userService.login(loginDTO);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} else {
 			return new ResponseEntity<>("Username/Email not found.", HttpStatus.UNAUTHORIZED);
 		}
 	}
@@ -66,14 +71,25 @@ public class UserController {
 		}
 
 		// create user object
-		user.setPassword(passwordEncoder.encode(user.getPassword()));
-
 		RoleEntity roles = roleRepository.findByName("ROLE_ADMIN").get();
 		user.setRoles(Collections.singleton(roles));
 
-		userRepository.save(user);
+		userService.saveUser(user);
 
 		return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
 
 	}
+
+	@GetMapping("/logout")
+	public ResponseEntity<LogoutResponseDTO> logout(@RequestParam("token") String token) {
+		LogoutResponseDTO logoutResponseDTO = userService.logout(token);
+		return ResponseEntity.ok(logoutResponseDTO);
+	}
+
+	@GetMapping("/validate")
+	public ResponseEntity<InstrospectResponseDTO> validate(@RequestParam("token") String token) {
+		InstrospectResponseDTO instrospectResponseDTO = userService.validate(token);
+		return ResponseEntity.ok(instrospectResponseDTO);
+	}
+
 }

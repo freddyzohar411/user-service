@@ -62,7 +62,7 @@ public class UserEntity {
 	@Column(name = "password")
 	private String password;
 
-	@Column(name = "mobile", unique = true)
+	@Column(name = "mobile")
 	@Length(min = 10, message = "Password should be atleast 10 number long")
 	private String mobile;
 

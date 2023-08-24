@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class LoginDTO {
-	private String username;
-	private String password;
+public class InstrospectResponseDTO {
+	private Boolean active;
+
 }

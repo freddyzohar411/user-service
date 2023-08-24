@@ -1,47 +1,67 @@
 package com.avensys.rts.userservice.config;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.client.RestTemplate;
+
+import com.avensys.rts.userservice.service.UserService;
 
 @Configuration
-@EnableMethodSecurity
+@EnableWebSecurity
 public class SecurityConfig {
 
-	private UserDetailsService userDetailsService;
+	  @Bean
+	    public UserDetailsService userDetailsService() {
+	        return new UserService();
+	    }
 
-	public SecurityConfig(UserDetailsService userDetailsService) {
-		this.userDetailsService = userDetailsService;
-	}
+	    @Bean
+	    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	        http
+	                .csrf(csrf -> csrf.disable())
+	                .authorizeHttpRequests(auth -> {
+	                    auth
+	                            .requestMatchers("/api/**").permitAll()
+	                            .requestMatchers("/api/user/**").permitAll()
+	                            .anyRequest().authenticated();
+	                });
+	        System.out.println("SecurityFilterChain");
 
-	@Bean
-	public static PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+	        return http.build();
+	    }
 
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-		return configuration.getAuthenticationManager();
-	}
+	    @Bean
+	    public PasswordEncoder passwordEncoder() {
+	        return new BCryptPasswordEncoder();
+	    }
 
-	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	    @Bean
+	    public AuthenticationProvider authenticationProvider() {
+	        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+	        authenticationProvider.setUserDetailsService(userDetailsService());
+	        authenticationProvider.setPasswordEncoder(passwordEncoder());
+	        return authenticationProvider;
+	    }
 
-		http.csrf().disable().authorizeHttpRequests((authorize) ->
-		// authorize.anyRequest().authenticated()
-		authorize.requestMatchers(HttpMethod.GET, "/api/**").permitAll().requestMatchers("/api/user/**").permitAll()
-				.anyRequest().authenticated()
+	    @Bean
+	    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+	        return config.getAuthenticationManager();
+	    }
 
-		);
+	    @Bean
+	    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+	        return builder.build();
+	    }
 
-		return http.build();
-	}
 }

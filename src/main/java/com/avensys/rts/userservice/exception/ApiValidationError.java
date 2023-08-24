@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
-class ApiValidationError extends ApiSubError {
+public class ApiValidationError extends ApiSubError {
 	private String object;
 	private String field;
 	private Object rejectedValue;
