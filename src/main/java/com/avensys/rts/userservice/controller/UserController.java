@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +27,7 @@ import com.avensys.rts.userservice.repository.RoleRepository;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.service.UserService;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
