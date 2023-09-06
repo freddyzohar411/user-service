@@ -1,0 +1,124 @@
+{
+	"info": {
+		"_postman_id": "415e6034-d838-46c4-b453-e1e3dac59174",
+		"name": "login-apis",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29554604"
+	},
+	"item": [
+		{
+			"name": "signin",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\":\"rahul@aven-sys.com\",\r\n    \"password\":\"pass1234\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/api/user/signin",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"api",
+						"user",
+						"signin"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "signup",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"firstName\":\"Rahul\",\r\n    \"lastName\":\"Sahu\",\r\n    \"username\":\"rahul@aven-sys.com\",\r\n    \"email\":\"rahul@aven-sys.com\",\r\n    \"password\":\"pass1234\",\r\n    \"mobile\":\"+91-8120871155\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8090/api/user/signup",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"api",
+						"user",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "validate",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/api/user/validate?token=eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJyM3FJZW9xakZFeTlEOC1PRWhGZml4RVlDeVJYQ3RQUzY0ak04eTd6eTgwIn0.eyJleHAiOjE2OTM5MjY4OTMsImlhdCI6MTY5MzkyNjU5MywianRpIjoiZjQwMWQwZWMtNzUzYi00NGVmLWE4MTQtNWU4YjEwYjA0NDYwIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9ydHNyZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJiNjhkNjk0Mi0zYjMzLTQ3MGQtODU3Yy02NjU5MmM2MTU2MzQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJydHNjbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiOTA3MDE4MWItMWM3ZS00NWY0LTkxMDQtNDA2YjMwMzI4MDNmIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL3d3dy5rZXljbG9hay5vcmciXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJkZWZhdWx0LXJvbGVzLXJ0c3JlYWxtIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwic2lkIjoiOTA3MDE4MWItMWM3ZS00NWY0LTkxMDQtNDA2YjMwMzI4MDNmIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJSYWh1bCBTYWh1IiwicHJlZmVycmVkX3VzZXJuYW1lIjoicmFodWxAYXZlbi1zeXMuY29tIiwiZ2l2ZW5fbmFtZSI6IlJhaHVsIiwiZmFtaWx5X25hbWUiOiJTYWh1IiwiZW1haWwiOiJyYWh1bEBhdmVuLXN5cy5jb20ifQ.KjYMFTV1jfRvLgXFDvOyGycX_MyvcYdmWf4zFJhRnPNrfd8j-5GKAEysYKrrsjGCtuJFClyxYGsHvIaJ6DFZjyBruKu2NINwCRh4r6z2qa34tntMZ6snISC40623rvcdV6J2SWL99IurpvAd_Dx3Vq5P7dHiO0ssUB2ZyUmUJo44AYW9SDkmmCSanQzr-IV0Fou_Whh6I2htSfQ0AuPnuKGXNQlA800sWP0rEA6yhHmnKlzca5HIMwU-jeyzBh1Yzq7u5ytjyxNId3PqtqUF-9Q2Xf790YRMZjc3EwPPnFz3aMgTqCJ0dlySJXhq1PpX1RhQGEw4H8e1_K9cs3q-6Q",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"api",
+						"user",
+						"validate"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJyM3FJZW9xakZFeTlEOC1PRWhGZml4RVlDeVJYQ3RQUzY0ak04eTd6eTgwIn0.eyJleHAiOjE2OTM5MjY4OTMsImlhdCI6MTY5MzkyNjU5MywianRpIjoiZjQwMWQwZWMtNzUzYi00NGVmLWE4MTQtNWU4YjEwYjA0NDYwIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9ydHNyZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJiNjhkNjk0Mi0zYjMzLTQ3MGQtODU3Yy02NjU5MmM2MTU2MzQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJydHNjbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiOTA3MDE4MWItMWM3ZS00NWY0LTkxMDQtNDA2YjMwMzI4MDNmIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL3d3dy5rZXljbG9hay5vcmciXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJkZWZhdWx0LXJvbGVzLXJ0c3JlYWxtIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwic2lkIjoiOTA3MDE4MWItMWM3ZS00NWY0LTkxMDQtNDA2YjMwMzI4MDNmIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJSYWh1bCBTYWh1IiwicHJlZmVycmVkX3VzZXJuYW1lIjoicmFodWxAYXZlbi1zeXMuY29tIiwiZ2l2ZW5fbmFtZSI6IlJhaHVsIiwiZmFtaWx5X25hbWUiOiJTYWh1IiwiZW1haWwiOiJyYWh1bEBhdmVuLXN5cy5jb20ifQ.KjYMFTV1jfRvLgXFDvOyGycX_MyvcYdmWf4zFJhRnPNrfd8j-5GKAEysYKrrsjGCtuJFClyxYGsHvIaJ6DFZjyBruKu2NINwCRh4r6z2qa34tntMZ6snISC40623rvcdV6J2SWL99IurpvAd_Dx3Vq5P7dHiO0ssUB2ZyUmUJo44AYW9SDkmmCSanQzr-IV0Fou_Whh6I2htSfQ0AuPnuKGXNQlA800sWP0rEA6yhHmnKlzca5HIMwU-jeyzBh1Yzq7u5ytjyxNId3PqtqUF-9Q2Xf790YRMZjc3EwPPnFz3aMgTqCJ0dlySJXhq1PpX1RhQGEw4H8e1_K9cs3q-6Q"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "logout",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8090/api/user/logout?token=eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJyM3FJZW9xakZFeTlEOC1PRWhGZml4RVlDeVJYQ3RQUzY0ak04eTd6eTgwIn0.eyJleHAiOjE2OTM5MjY4MDIsImlhdCI6MTY5MzkyNjUwMiwianRpIjoiZWNiNWE2YjItNDJiNC00MDY5LWIyNjgtNzgyYzI4NWQ1ZTM1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9ydHNyZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJiNjhkNjk0Mi0zYjMzLTQ3MGQtODU3Yy02NjU5MmM2MTU2MzQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJydHNjbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiNmE5MzMyOTItOTcxOS00ZjNkLWJiZmUtMzUzMzcyMjk0MmYwIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL3d3dy5rZXljbG9hay5vcmciXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJkZWZhdWx0LXJvbGVzLXJ0c3JlYWxtIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwic2lkIjoiNmE5MzMyOTItOTcxOS00ZjNkLWJiZmUtMzUzMzcyMjk0MmYwIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJSYWh1bCBTYWh1IiwicHJlZmVycmVkX3VzZXJuYW1lIjoicmFodWxAYXZlbi1zeXMuY29tIiwiZ2l2ZW5fbmFtZSI6IlJhaHVsIiwiZmFtaWx5X25hbWUiOiJTYWh1IiwiZW1haWwiOiJyYWh1bEBhdmVuLXN5cy5jb20ifQ.ICZHZeL_2NVm0Z4VuUuGX65G7X0VAyDANkqQJjhlTqmuk-JVO8rlH9QsyPbPYrWhz6xomPJ8Dp1aASyGpp6tH2iC51-M-eF87-lbLcXtOJaTRAw7P-aoPAdvkwCDK4FSpjDzvQ2IAHQMyow-TjpswDKifcL7TtYChkqheAvz5IK1u3SwFHquDXZ7TyWHsalmste6dbNXyCsO3OtriK6xiD1D_2ngf8hVcFK0odXp0LbecHPo40Ah6Ns1cwh5oxAVBJTw28lyIT9Kt8xKIQlf4IrHyp_5Z2Vw22ukmbtCnMeodHURPauUgZSan87i07D87ec1j0EF0QcBw85YsEdOcg",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8090",
+					"path": [
+						"api",
+						"user",
+						"logout"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJyM3FJZW9xakZFeTlEOC1PRWhGZml4RVlDeVJYQ3RQUzY0ak04eTd6eTgwIn0.eyJleHAiOjE2OTM5MjY4MDIsImlhdCI6MTY5MzkyNjUwMiwianRpIjoiZWNiNWE2YjItNDJiNC00MDY5LWIyNjgtNzgyYzI4NWQ1ZTM1IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9ydHNyZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiJiNjhkNjk0Mi0zYjMzLTQ3MGQtODU3Yy02NjU5MmM2MTU2MzQiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJydHNjbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiNmE5MzMyOTItOTcxOS00ZjNkLWJiZmUtMzUzMzcyMjk0MmYwIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL3d3dy5rZXljbG9hay5vcmciXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJkZWZhdWx0LXJvbGVzLXJ0c3JlYWxtIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwic2lkIjoiNmE5MzMyOTItOTcxOS00ZjNkLWJiZmUtMzUzMzcyMjk0MmYwIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJSYWh1bCBTYWh1IiwicHJlZmVycmVkX3VzZXJuYW1lIjoicmFodWxAYXZlbi1zeXMuY29tIiwiZ2l2ZW5fbmFtZSI6IlJhaHVsIiwiZmFtaWx5X25hbWUiOiJTYWh1IiwiZW1haWwiOiJyYWh1bEBhdmVuLXN5cy5jb20ifQ.ICZHZeL_2NVm0Z4VuUuGX65G7X0VAyDANkqQJjhlTqmuk-JVO8rlH9QsyPbPYrWhz6xomPJ8Dp1aASyGpp6tH2iC51-M-eF87-lbLcXtOJaTRAw7P-aoPAdvkwCDK4FSpjDzvQ2IAHQMyow-TjpswDKifcL7TtYChkqheAvz5IK1u3SwFHquDXZ7TyWHsalmste6dbNXyCsO3OtriK6xiD1D_2ngf8hVcFK0odXp0LbecHPo40Ah6Ns1cwh5oxAVBJTw28lyIT9Kt8xKIQlf4IrHyp_5Z2Vw22ukmbtCnMeodHURPauUgZSan87i07D87ec1j0EF0QcBw85YsEdOcg"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
