@@ -1,6 +1,7 @@
 package com.avensys.rts.userservice.service;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -96,7 +97,7 @@ public class UserService implements UserDetailsService {
 		newUser.setEmail(user.getEmail());
 		newUser.setEmailVerified(true);
 		newUser.setEnabled(true);
-		System.err.println("test user.getPassword()" + password);
+
 		// Set the user's password
 		CredentialRepresentation passwordCred = new CredentialRepresentation();
 		passwordCred.setType(CredentialRepresentation.PASSWORD);
@@ -129,10 +130,6 @@ public class UserService implements UserDetailsService {
 		map.add("username", loginDTO.getUsername());
 		map.add("password", loginDTO.getPassword());
 
-		System.err.println("clientId " + clientId);
-		System.err.println("clientSecret " + clientSecret);
-		System.err.println("grantType " + grantType);
-		System.err.println("clientId " + clientId);
 		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
 
 		ResponseEntity<LoginResponseDTO> response = restTemplate.postForEntity(tokenUrl, httpEntity,
@@ -174,6 +171,18 @@ public class UserService implements UserDetailsService {
 		ResponseEntity<InstrospectResponseDTO> response = restTemplate.postForEntity(instrospectUrl, httpEntity,
 				InstrospectResponseDTO.class);
 		return response.getBody();
+	}
+
+	public void delete(Long id) {
+		userRepository.deleteById(id);
+	}
+
+	public void update(UserEntity user) {
+		userRepository.save(user);
+	}
+
+	public Optional<UserEntity> getUserById(Long id) {
+		return userRepository.findById(id);
 	}
 
 }
