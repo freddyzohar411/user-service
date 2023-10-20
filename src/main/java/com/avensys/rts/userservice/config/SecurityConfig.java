@@ -21,47 +21,43 @@ import com.avensys.rts.userservice.service.UserService;
 @EnableWebSecurity
 public class SecurityConfig {
 
-	  @Bean
-	    public UserDetailsService userDetailsService() {
-	        return new UserService();
-	    }
+	@Bean
+	public UserDetailsService userDetailsService() {
+		return new UserService();
+	}
 
-	    @Bean
-	    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-	        http
-	                .csrf(csrf -> csrf.disable())
-	                .authorizeHttpRequests(auth -> {
-	                    auth
-	                            .requestMatchers("/api/**").permitAll()
-	                            .requestMatchers("/api/user/**").permitAll()
-	                            .anyRequest().authenticated();
-	                });
-	        System.out.println("SecurityFilterChain");
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> {
+			auth.requestMatchers("/api/**").permitAll().requestMatchers("/api/user/**").permitAll().anyRequest()
+					.authenticated();
+		});
+		System.out.println("SecurityFilterChain");
 
-	        return http.build();
-	    }
+		return http.build();
+	}
 
-	    @Bean
-	    public PasswordEncoder passwordEncoder() {
-	        return new BCryptPasswordEncoder();
-	    }
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
-	    @Bean
-	    public AuthenticationProvider authenticationProvider() {
-	        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-	        authenticationProvider.setUserDetailsService(userDetailsService());
-	        authenticationProvider.setPasswordEncoder(passwordEncoder());
-	        return authenticationProvider;
-	    }
+	@Bean
+	public AuthenticationProvider authenticationProvider() {
+		DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+		authenticationProvider.setUserDetailsService(userDetailsService());
+		authenticationProvider.setPasswordEncoder(passwordEncoder());
+		return authenticationProvider;
+	}
 
-	    @Bean
-	    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-	        return config.getAuthenticationManager();
-	    }
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+		return config.getAuthenticationManager();
+	}
 
-	    @Bean
-	    public RestTemplate restTemplate(RestTemplateBuilder builder) {
-	        return builder.build();
-	    }
+	@Bean
+	public RestTemplate restTemplate(RestTemplateBuilder builder) {
+		return builder.build();
+	}
 
 }

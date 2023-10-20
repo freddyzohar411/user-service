@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Length;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -60,6 +62,7 @@ public class UserEntity {
 	@NotNull(message = "Password cannot be empty")
 	@Length(min = 7, message = "Password should be atleast 7 characters long")
 	@Column(name = "password")
+	@JsonIgnore
 	private String password;
 
 	@Column(name = "mobile")
@@ -79,6 +82,9 @@ public class UserEntity {
 
 	@Column(name = "enabled")
 	private Boolean enabled = true;
+
+	@Column(name = "is_deleted")
+	private Boolean isDeleted = false;
 
 	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
