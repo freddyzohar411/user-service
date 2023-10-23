@@ -8,6 +8,7 @@ public class MessageConstants {
 	public static final String USER_DELETED = "user.deleted";
 	public static final String USER_LOGIN_SUCCESS = "user.login.success";
 
+	public static final String ERROR_PROVIDE_ID = "error.provide.id";
 	public static final String ERROR_USER_NOT_FOUND = "error.usernotfound";
 	public static final String ERROR_USER_EMAIL_NOT_FOUND = "error.useremailnotfound";
 	public static final String ERROR_USERNAME_TAKEN = "error.usernametaken";

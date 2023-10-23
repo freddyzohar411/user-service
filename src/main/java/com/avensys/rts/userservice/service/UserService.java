@@ -143,7 +143,8 @@ public class UserService implements UserDetailsService {
 	}
 
 	public void update(UserEntity user) throws ServiceException {
-		if (user.getKeycloackId() != null) {
+		UserEntity dbUser = getUserById(user.getId());
+		if (dbUser.getKeycloackId() != null) {
 			String password = user.getPassword();
 			String encodedPassword = passwordEncoder.encode(password);
 			user.setPassword(encodedPassword);
@@ -183,6 +184,11 @@ public class UserService implements UserDetailsService {
 	}
 
 	public UserEntity getUserById(Long id) throws ServiceException {
+		if (id == null) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_ID, new Object[] { id },
+					LocaleContextHolder.getLocale()));
+		}
+
 		Optional<UserEntity> user = userRepository.findById(id);
 		if (user.isPresent() && !user.get().getIsDeleted()) {
 			return user.get();
