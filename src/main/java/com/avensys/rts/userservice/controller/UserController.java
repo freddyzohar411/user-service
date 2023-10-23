@@ -1,7 +1,6 @@
 package com.avensys.rts.userservice.controller;
 
 import java.util.Collections;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -102,49 +101,39 @@ public class UserController {
 					messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));
 
 		} catch (ServiceException e) {
-			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, messageSource
-					.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null, LocaleContextHolder.getLocale()));
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, e.getMessage());
 		}
 	}
 
 	@PutMapping
 	public ResponseEntity<?> editUser(@RequestBody UserEntity user) {
 		try {
-			// create user object
-			RoleEntity roles = roleRepository.findByName("ROLE_ADMIN").get();
-			user.setRoles(Collections.singleton(roles));
-			userService.saveUser(user);
-
-			return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
+			userService.update(user);
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
+					messageSource.getMessage(MessageConstants.USER_UPDATED, null, LocaleContextHolder.getLocale()));
 		} catch (ServiceException e) {
-			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, messageSource
-					.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null, LocaleContextHolder.getLocale()));
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
 		}
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<?> deleteUser(@PathVariable("id") long id) {
-		Optional<UserEntity> user = userService.getUserById(id);
-		if (user.isPresent() && !user.get().getIsDeleted()) {
-			UserEntity dbUser = user.get();
-			dbUser.setIsDeleted(true);
-			userService.update(dbUser);
+	public ResponseEntity<?> deleteUser(@PathVariable("id") Long id) {
+		try {
+			userService.delete(id);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
 					messageSource.getMessage(MessageConstants.USER_DELETED, null, LocaleContextHolder.getLocale()));
-		} else {
-			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, messageSource.getMessage(
-					MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { id }, LocaleContextHolder.getLocale()));
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
 		}
 	}
 
 	@GetMapping("/{id}")
 	public ResponseEntity<?> find(@PathVariable("id") Long id) {
-		Optional<UserEntity> user = userService.getUserById(id);
-		if (user.isPresent() && !user.get().getIsDeleted()) {
-			return ResponseUtil.generateSuccessResponse(user.get(), HttpStatus.OK, null);
-		} else {
-			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, messageSource.getMessage(
-					MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { id }, LocaleContextHolder.getLocale()));
+		try {
+			UserEntity user = userService.getUserById(id);
+			return ResponseUtil.generateSuccessResponse(user, HttpStatus.OK, null);
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
 		}
 	}
 

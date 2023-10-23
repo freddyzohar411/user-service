@@ -1,8 +1,13 @@
 package com.avensys.rts.userservice.util;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -67,10 +72,38 @@ public class KeyCloackUtil {
 		return keycloak;
 	}
 
+	public static CredentialRepresentation createPasswordCredentials(String password) {
+		CredentialRepresentation passwordCredentials = new CredentialRepresentation();
+		passwordCredentials.setTemporary(false);
+		passwordCredentials.setType(CredentialRepresentation.PASSWORD);
+		passwordCredentials.setValue(password);
+		return passwordCredentials;
+	}
+
 	public RealmResource getRealm() {
 		Keycloak keycloak = getInstance();
 		RealmResource realmResource = keycloak.realm(realm);
 		return realmResource;
+	}
+
+	public String getIdByEmail(String email) {
+		List<UserRepresentation> users = getRealm().users().searchByEmail(email, true);
+		List<String> ids = users.stream().map(userData -> userData.getId()).collect(Collectors.toList());
+		if (ids.size() > 0) {
+			return ids.get(0);
+		} else {
+			return null;
+		}
+	}
+
+	public String getIdByUsername(String username) {
+		List<UserRepresentation> users = getRealm().users().searchByUsername(username, true);
+		List<String> ids = users.stream().map(userData -> userData.getId()).collect(Collectors.toList());
+		if (ids.size() > 0) {
+			return ids.get(0);
+		} else {
+			return null;
+		}
 	}
 
 }

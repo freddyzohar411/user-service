@@ -1,10 +1,11 @@
 package com.avensys.rts.userservice.service;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -25,6 +26,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -39,6 +41,9 @@ import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
 
+import jakarta.ws.rs.core.Response;
+
+@Transactional
 @Service
 public class UserService implements UserDetailsService {
 
@@ -75,6 +80,17 @@ public class UserService implements UserDetailsService {
 	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.authorization-grant-type}")
 	private String grantType;
 
+	@Override
+	public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+		UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
+				() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
+
+		Set<GrantedAuthority> authorities = user.getRoles().stream()
+				.map((role) -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toSet());
+
+		return new User(user.getEmail(), user.getPassword(), authorities);
+	}
+
 	public void saveUser(UserEntity user) throws ServiceException {
 
 		// add check for username exists in a DB
@@ -86,6 +102,12 @@ public class UserService implements UserDetailsService {
 		// add check for email exists in DB
 		if (userRepository.existsByEmail(user.getEmail())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		// add check for email exists in DB
+		if (user.getEmployeeId() != null && userRepository.existsByEmployeeId(user.getEmployeeId())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
@@ -105,35 +127,69 @@ public class UserService implements UserDetailsService {
 		newUser.setEnabled(true);
 
 		// Set the user's password
-		CredentialRepresentation passwordCred = new CredentialRepresentation();
-		passwordCred.setType(CredentialRepresentation.PASSWORD);
-		passwordCred.setValue(password); // Set the desired password
-		passwordCred.setTemporary(false); // Set to false for a permanent password
+		CredentialRepresentation passwordCred = KeyCloackUtil.createPasswordCredentials(password);
 
-		newUser.setCredentials(Arrays.asList(passwordCred));
-		usersResource.create(newUser);
-
-		// Save to the database
-		userRepository.save(user);
+		newUser.setCredentials(Collections.singletonList(passwordCred));
+		Response response = usersResource.create(newUser);
+		String kcId = CreatedResponseUtil.getCreatedId(response);
+		if (kcId != null) {
+			// Save to the database
+			user.setKeycloackId(kcId);
+			userRepository.save(user);
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
+					LocaleContextHolder.getLocale()));
+		}
 	}
 
-	public void update(UserEntity user) {
-		userRepository.save(user);
+	public void update(UserEntity user) throws ServiceException {
+		if (user.getKeycloackId() != null) {
+			String password = user.getPassword();
+			String encodedPassword = passwordEncoder.encode(password);
+			user.setPassword(encodedPassword);
+
+			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
+			UserRepresentation kcUser = new UserRepresentation();
+			kcUser.setUsername(user.getUsername());
+			kcUser.setFirstName(user.getFirstName());
+			kcUser.setLastName(user.getLastName());
+			kcUser.setEmail(user.getEmail());
+			kcUser.setEmailVerified(true);
+			kcUser.setEnabled(true);
+			kcUser.setCredentials(Collections.singletonList(credential));
+
+			UsersResource usersResource = keyCloackUtil.getRealm().users();
+			usersResource.get(user.getKeycloackId()).update(kcUser);
+
+			userRepository.save(user);
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
+		}
 	}
 
-	public Optional<UserEntity> getUserById(Long id) {
-		return userRepository.findById(id);
+	public void delete(Long id) throws ServiceException {
+		UserEntity dbUser = getUserById(id);
+		if (dbUser.getKeycloackId() != null) {
+			UsersResource usersResource = keyCloackUtil.getRealm().users();
+			usersResource.get(dbUser.getKeycloackId()).remove();
+
+			dbUser.setIsDeleted(true);
+			userRepository.save(dbUser);
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+					new Object[] { id }, LocaleContextHolder.getLocale()));
+		}
 	}
 
-	@Override
-	public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-		UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
-				() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
-
-		Set<GrantedAuthority> authorities = user.getRoles().stream()
-				.map((role) -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toSet());
-
-		return new User(user.getEmail(), user.getPassword(), authorities);
+	public UserEntity getUserById(Long id) throws ServiceException {
+		Optional<UserEntity> user = userRepository.findById(id);
+		if (user.isPresent() && !user.get().getIsDeleted()) {
+			return user.get();
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+					new Object[] { id }, LocaleContextHolder.getLocale()));
+		}
 	}
 
 	public LoginResponseDTO login(LoginDTO loginDTO) {

@@ -43,6 +43,10 @@ public class UserEntity {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_sequence")
 	private Long id;
 
+	@NotNull(message = "KeycloackId cannot be empty")
+	@Column(name = "keycloack_id", unique = true)
+	private String keycloackId;
+
 	@NotNull(message = "First Name cannot be empty")
 	@Column(name = "first_name")
 	private String firstName;
