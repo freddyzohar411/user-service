@@ -7,7 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Length;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -62,12 +63,15 @@ public class UserEntity {
 	@NotNull(message = "Password cannot be empty")
 	@Length(min = 7, message = "Password should be atleast 7 characters long")
 	@Column(name = "password")
-	@JsonIgnore
+	@JsonProperty(access = Access.WRITE_ONLY)
 	private String password;
 
 	@Column(name = "mobile")
 	@Length(min = 10, message = "Password should be atleast 10 number long")
 	private String mobile;
+
+	@Column(name = "employee_id")
+	private String employeeId;
 
 	@CreationTimestamp
 	@Column(name = "created_at", updatable = false)

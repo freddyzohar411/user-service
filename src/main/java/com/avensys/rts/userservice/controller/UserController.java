@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.RoleEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
@@ -31,7 +31,6 @@ import com.avensys.rts.userservice.payload.LoginDTO;
 import com.avensys.rts.userservice.payload.LoginResponseDTO;
 import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.repository.RoleRepository;
-import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.ResponseUtil;
 
@@ -44,13 +43,7 @@ public class UserController {
 	private UserService userService;
 
 	@Autowired
-	private UserRepository userRepository;
-
-	@Autowired
 	private RoleRepository roleRepository;
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -64,93 +57,29 @@ public class UserController {
 				.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
 		if (authenticate.isAuthenticated()) {
 			LoginResponseDTO response = userService.login(loginDTO);
+
 			return new ResponseEntity<>(response, HttpStatus.OK);
 		} else {
-			return new ResponseEntity<>("Username/Email not found.", HttpStatus.UNAUTHORIZED);
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource
+					.getMessage(MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
 		}
 	}
 
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@RequestBody UserEntity user) {
+		try {
+			// create user object
+			RoleEntity roles = roleRepository.findByName("ROLE_ADMIN").get();
+			user.setRoles(Collections.singleton(roles));
 
-		// add check for username exists in a DB
-		if (userRepository.existsByUsername(user.getUsername())) {
-			return new ResponseEntity<>("Username is already taken!", HttpStatus.BAD_REQUEST);
+			userService.saveUser(user);
+
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
+					messageSource.getMessage(MessageConstants.USER_REGISTERED, null, LocaleContextHolder.getLocale()));
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, messageSource
+					.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null, LocaleContextHolder.getLocale()));
 		}
-
-		// add check for email exists in DB
-		if (userRepository.existsByEmail(user.getEmail())) {
-			return new ResponseEntity<>("Email is already taken!", HttpStatus.BAD_REQUEST);
-		}
-
-		// create user object
-		RoleEntity roles = roleRepository.findByName("ROLE_ADMIN").get();
-		user.setRoles(Collections.singleton(roles));
-
-		userService.saveUser(user);
-
-		return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
-				messageSource.getMessage(MessageConstants.USER_REGISTERED, null, LocaleContextHolder.getLocale()));
-
-	}
-
-	@GetMapping("/{id}")
-	public ResponseEntity<?> find(@PathVariable("id") Long id) {
-		Optional<UserEntity> user = userService.getUserById(id);
-		if (user.isPresent()) {
-			return ResponseUtil.generateSuccessResponse(user.get(), HttpStatus.OK, null);
-		} else {
-			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, messageSource.getMessage(
-					MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { id }, LocaleContextHolder.getLocale()));
-		}
-	}
-
-	@PostMapping("/createUser")
-	public ResponseEntity<?> createUser(@RequestBody UserEntity user) {
-
-		// add check for username exists in a DB
-		if (userRepository.existsByUsername(user.getUsername())) {
-			return new ResponseEntity<>("Username is already taken!", HttpStatus.BAD_REQUEST);
-		}
-
-		// add check for email exists in DB
-		if (userRepository.existsByEmail(user.getEmail())) {
-			return new ResponseEntity<>("Email is already taken!", HttpStatus.BAD_REQUEST);
-		}
-
-		userService.saveUser(user);
-
-		return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
-				messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));
-	}
-
-	@PutMapping("/editUser")
-	public ResponseEntity<?> editUser(@RequestBody UserEntity user) {
-
-		// add check for username exists in a DB
-		if (userRepository.existsByUsername(user.getUsername())) {
-			return new ResponseEntity<>("Username is already taken!", HttpStatus.BAD_REQUEST);
-		}
-
-		// add check for email exists in DB
-		if (userRepository.existsByEmail(user.getEmail())) {
-			return new ResponseEntity<>("Email is already taken!", HttpStatus.BAD_REQUEST);
-		}
-
-		// create user object
-		RoleEntity roles = roleRepository.findByName("ROLE_ADMIN").get();
-		user.setRoles(Collections.singleton(roles));
-
-		userService.saveUser(user);
-
-		return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
-
-	}
-
-	@DeleteMapping("/deleteUser/{id}")
-	public ResponseEntity<?> deleteUser(@PathVariable("id") long id) {
-		userService.delete(id);
-		return ResponseEntity.noContent().build();
 	}
 
 	@GetMapping("/logout")
@@ -163,6 +92,60 @@ public class UserController {
 	public ResponseEntity<InstrospectResponseDTO> validate(@RequestParam("token") String token) {
 		InstrospectResponseDTO instrospectResponseDTO = userService.validate(token);
 		return ResponseEntity.ok(instrospectResponseDTO);
+	}
+
+	@PostMapping
+	public ResponseEntity<?> createUser(@RequestBody UserEntity user) {
+		try {
+			userService.saveUser(user);
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
+					messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));
+
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, messageSource
+					.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null, LocaleContextHolder.getLocale()));
+		}
+	}
+
+	@PutMapping
+	public ResponseEntity<?> editUser(@RequestBody UserEntity user) {
+		try {
+			// create user object
+			RoleEntity roles = roleRepository.findByName("ROLE_ADMIN").get();
+			user.setRoles(Collections.singleton(roles));
+			userService.saveUser(user);
+
+			return new ResponseEntity<>("User registered successfully", HttpStatus.OK);
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, messageSource
+					.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null, LocaleContextHolder.getLocale()));
+		}
+	}
+
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> deleteUser(@PathVariable("id") long id) {
+		Optional<UserEntity> user = userService.getUserById(id);
+		if (user.isPresent() && !user.get().getIsDeleted()) {
+			UserEntity dbUser = user.get();
+			dbUser.setIsDeleted(true);
+			userService.update(dbUser);
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
+					messageSource.getMessage(MessageConstants.USER_DELETED, null, LocaleContextHolder.getLocale()));
+		} else {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, messageSource.getMessage(
+					MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { id }, LocaleContextHolder.getLocale()));
+		}
+	}
+
+	@GetMapping("/{id}")
+	public ResponseEntity<?> find(@PathVariable("id") Long id) {
+		Optional<UserEntity> user = userService.getUserById(id);
+		if (user.isPresent() && !user.get().getIsDeleted()) {
+			return ResponseUtil.generateSuccessResponse(user.get(), HttpStatus.OK, null);
+		} else {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, messageSource.getMessage(
+					MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { id }, LocaleContextHolder.getLocale()));
+		}
 	}
 
 }

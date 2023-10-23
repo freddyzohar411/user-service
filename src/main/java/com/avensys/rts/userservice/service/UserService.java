@@ -5,14 +5,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -29,12 +29,15 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.avensys.rts.userservice.api.exception.ServiceException;
+import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
 import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
 import com.avensys.rts.userservice.payload.LoginDTO;
 import com.avensys.rts.userservice.payload.LoginResponseDTO;
 import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
+import com.avensys.rts.userservice.util.KeyCloackUtil;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -48,8 +51,11 @@ public class UserService implements UserDetailsService {
 	@Autowired
 	private UserRepository userRepository;
 
-	@Value("${spring.security.oauth2.client.provider.keycloak.issuer-uri}")
-	private String issueUrl;
+	@Autowired
+	private KeyCloackUtil keyCloackUtil;
+
+	@Autowired
+	private MessageSource messageSource;
 
 	@Value("${spring.security.oauth2.client.provider.keycloak.token-uri}")
 	private String tokenUrl;
@@ -69,25 +75,26 @@ public class UserService implements UserDetailsService {
 	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.authorization-grant-type}")
 	private String grantType;
 
-	@Value("${keycloak.realm}")
-	private String realm;
+	public void saveUser(UserEntity user) throws ServiceException {
 
-	@Value("${keycloak.auth-server-url}")
-	private String serverUrl;
+		// add check for username exists in a DB
+		if (userRepository.existsByUsername(user.getUsername())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
 
-	public void saveUser(UserEntity user) {
+		// add check for email exists in DB
+		if (userRepository.existsByEmail(user.getEmail())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
 		String password = user.getPassword();
 		String encodedPassword = passwordEncoder.encode(password);
 		user.setPassword(encodedPassword);
 		userRepository.save(user);
 
-		// Add to keycloak
-		Keycloak keycloak = KeycloakBuilder.builder().serverUrl(serverUrl).realm("master").clientId("admin-cli")
-				.clientSecret(clientSecret).username("admin") // Admin username
-				.password("admin") // Admin password
-				.build();
-
-		RealmResource realmResource = keycloak.realm(realm);
+		RealmResource realmResource = keyCloackUtil.getRealm();
 		UsersResource usersResource = realmResource.users();
 
 		UserRepresentation newUser = new UserRepresentation();
@@ -171,10 +178,6 @@ public class UserService implements UserDetailsService {
 		ResponseEntity<InstrospectResponseDTO> response = restTemplate.postForEntity(instrospectUrl, httpEntity,
 				InstrospectResponseDTO.class);
 		return response.getBody();
-	}
-
-	public void delete(Long id) {
-		userRepository.deleteById(id);
 	}
 
 	public void update(UserEntity user) {
