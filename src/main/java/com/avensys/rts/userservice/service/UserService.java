@@ -92,7 +92,6 @@ public class UserService implements UserDetailsService {
 		String password = user.getPassword();
 		String encodedPassword = passwordEncoder.encode(password);
 		user.setPassword(encodedPassword);
-		userRepository.save(user);
 
 		RealmResource realmResource = keyCloackUtil.getRealm();
 		UsersResource usersResource = realmResource.users();
@@ -113,6 +112,17 @@ public class UserService implements UserDetailsService {
 
 		newUser.setCredentials(Arrays.asList(passwordCred));
 		usersResource.create(newUser);
+
+		// Save to the database
+		userRepository.save(user);
+	}
+
+	public void update(UserEntity user) {
+		userRepository.save(user);
+	}
+
+	public Optional<UserEntity> getUserById(Long id) {
+		return userRepository.findById(id);
 	}
 
 	@Override
@@ -178,14 +188,6 @@ public class UserService implements UserDetailsService {
 		ResponseEntity<InstrospectResponseDTO> response = restTemplate.postForEntity(instrospectUrl, httpEntity,
 				InstrospectResponseDTO.class);
 		return response.getBody();
-	}
-
-	public void update(UserEntity user) {
-		userRepository.save(user);
-	}
-
-	public Optional<UserEntity> getUserById(Long id) {
-		return userRepository.findById(id);
 	}
 
 }

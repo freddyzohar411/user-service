@@ -11,29 +11,48 @@ public class KeyCloackUtil {
 
 	private static Keycloak keycloak = null;
 
-	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.client-id}")
-	private static String clientId;
+	private static String clientSecret;
+	private static String realm;
+	private static String serverUrl;
+	private static String masterRealm;
+	private static String adminClientId;
+	private static String adminUserName;
+	private static String adminPassword;
 
 	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.client-secret}")
-	private static String clientSecret;
+	public void setClientSecret(String clientSecret) {
+		KeyCloackUtil.clientSecret = clientSecret;
+	}
 
 	@Value("${keycloak.realm}")
-	private static String realm;
+	public void setRealm(String realm) {
+		KeyCloackUtil.realm = realm;
+	}
 
 	@Value("${keycloak.auth-server-url}")
-	private static String serverUrl;
+	public void setServerUrl(String serverUrl) {
+		KeyCloackUtil.serverUrl = serverUrl;
+	}
 
 	@Value("${keycloak.master-realm}")
-	private static String masterRealm;
+	public void setMasterRealm(String masterRealm) {
+		KeyCloackUtil.masterRealm = masterRealm;
+	}
 
 	@Value("${keycloak.admin-client-id}")
-	private static String adminClientId;
+	public void setAdminClientId(String adminClientId) {
+		KeyCloackUtil.adminClientId = adminClientId;
+	}
 
 	@Value("${keycloak.admin-username}")
-	private static String adminUserName;
+	public void setAdminUserName(String adminUserName) {
+		KeyCloackUtil.adminUserName = adminUserName;
+	}
 
 	@Value("${keycloak.admin-password}")
-	private static String adminPassword;
+	public void setAdminPassword(String adminPassword) {
+		KeyCloackUtil.adminPassword = adminPassword;
+	}
 
 	private KeyCloackUtil() {
 	}
