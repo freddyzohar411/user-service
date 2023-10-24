@@ -1,34 +1,41 @@
 package com.avensys.rts.userservice.entity;
 
+import java.util.Set;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Setter
 @Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(name = "permission", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
-public class PermissionEntity {
+@Table(name = "permission", uniqueConstraints = { @UniqueConstraint(columnNames = { "permission_name" }) })
+public class PermissionEntity extends BaseEntity {
+
+	private static final long serialVersionUID = 281577856522059273L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
+	@Column(name = "id")
+	private Integer id;
 
-	@Column(length = 60)
-	private String name;
+	@Column(name = "permission_name")
+	private String permissionName;
 
-	@Column(length = 60)
-	private String module;
+	@Column(name = "permission_description")
+	private String permissionDescription;
 
-	@Column(length = 60)
-	private String action;
-
-	@Column(name = "is_active")
-	private boolean isActive;
+	@ManyToMany(mappedBy = "permissions")
+	private Set<RoleEntity> roleEntities;
 }

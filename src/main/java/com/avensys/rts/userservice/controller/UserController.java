@@ -1,7 +1,5 @@
 package com.avensys.rts.userservice.controller;
 
-import java.util.Collections;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -23,13 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
-import com.avensys.rts.userservice.entity.RoleEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
 import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
 import com.avensys.rts.userservice.payload.LoginDTO;
 import com.avensys.rts.userservice.payload.LoginResponseDTO;
 import com.avensys.rts.userservice.payload.LogoutResponseDTO;
-import com.avensys.rts.userservice.repository.RoleRepository;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.ResponseUtil;
 
@@ -40,9 +36,6 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
-
-	@Autowired
-	private RoleRepository roleRepository;
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
@@ -68,9 +61,6 @@ public class UserController {
 	public ResponseEntity<?> registerUser(@RequestBody UserEntity user) {
 		try {
 			// create user object
-			RoleEntity roles = roleRepository.findByName("ROLE_ADMIN").get();
-			user.setRoles(Collections.singleton(roles));
-
 			userService.saveUser(user);
 
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,

@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.avensys.rts.userservice.entity.RoleEntity;
 
 public interface RoleRepository extends JpaRepository<RoleEntity, Long> {
-	Optional<RoleEntity> findByName(String name);
+	Optional<RoleEntity> findByRoleName(String roleName);
 }
