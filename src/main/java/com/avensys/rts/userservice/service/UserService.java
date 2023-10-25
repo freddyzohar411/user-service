@@ -1,7 +1,9 @@
 package com.avensys.rts.userservice.service;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -16,6 +18,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -81,10 +85,12 @@ public class UserService implements UserDetailsService {
 		UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
 				() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
 
-//		Set<GrantedAuthority> authorities = user.getRoles().stream()
-//				.map((role) -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toSet());
+		Set<GrantedAuthority> authorities = new HashSet<>();
+		authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
-		return new User(user.getEmail(), user.getPassword(), null);
+//		Set<GrantedAuthority> authorities = list.map((role) -> new SimpleGrantedAuthority(role.getName()))
+//				.collect(Collectors.toSet());
+		return new User(user.getEmail(), user.getPassword(), authorities);
 	}
 
 	public void saveUser(UserEntity user) throws ServiceException {
