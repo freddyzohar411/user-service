@@ -1,25 +1,15 @@
 package com.avensys.rts.userservice.entity;
 
-import java.time.LocalDateTime;
-import java.util.Set;
-
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.validator.constraints.Length;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Email;
@@ -36,11 +26,17 @@ import lombok.Setter;
 @Entity
 @Table(name = "users", uniqueConstraints = { @UniqueConstraint(columnNames = { "username" }),
 		@UniqueConstraint(columnNames = { "email" }) })
-public class UserEntity {
-	@SequenceGenerator(name = "users_sequence", sequenceName = "users_sequence", allocationSize = 1)
+public class UserEntity extends BaseEntity {
+
+	private static final long serialVersionUID = -4259261306081521415L;
+
 	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_sequence")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+
+	@NotNull(message = "KeycloackId cannot be empty")
+	@Column(name = "keycloack_id", unique = true)
+	private String keycloackId;
 
 	@NotNull(message = "First Name cannot be empty")
 	@Column(name = "first_name")
@@ -62,32 +58,20 @@ public class UserEntity {
 	@NotNull(message = "Password cannot be empty")
 	@Length(min = 7, message = "Password should be atleast 7 characters long")
 	@Column(name = "password")
-	@JsonIgnore
+	@JsonProperty(access = Access.WRITE_ONLY)
 	private String password;
 
 	@Column(name = "mobile")
 	@Length(min = 10, message = "Password should be atleast 10 number long")
 	private String mobile;
 
-	@CreationTimestamp
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
-
-	@UpdateTimestamp
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
+	@Column(name = "employee_id")
+	private String employeeId;
 
 	@Column(name = "locked")
 	private Boolean locked = false;
 
 	@Column(name = "enabled")
 	private Boolean enabled = true;
-
-	@Column(name = "is_deleted")
-	private Boolean isDeleted = false;
-
-	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
-	private Set<RoleEntity> roles;
 
 }

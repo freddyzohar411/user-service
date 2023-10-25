@@ -1,41 +1,45 @@
 package com.avensys.rts.userservice.service;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.avensys.rts.userservice.api.exception.ServiceException;
+import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
 import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
 import com.avensys.rts.userservice.payload.LoginDTO;
 import com.avensys.rts.userservice.payload.LoginResponseDTO;
 import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
+import com.avensys.rts.userservice.util.KeyCloackUtil;
 
+import jakarta.ws.rs.core.Response;
+
+@Transactional
 @Service
 public class UserService implements UserDetailsService {
 
@@ -48,8 +52,11 @@ public class UserService implements UserDetailsService {
 	@Autowired
 	private UserRepository userRepository;
 
-	@Value("${spring.security.oauth2.client.provider.keycloak.issuer-uri}")
-	private String issueUrl;
+	@Autowired
+	private KeyCloackUtil keyCloackUtil;
+
+	@Autowired
+	private MessageSource messageSource;
 
 	@Value("${spring.security.oauth2.client.provider.keycloak.token-uri}")
 	private String tokenUrl;
@@ -69,25 +76,42 @@ public class UserService implements UserDetailsService {
 	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.authorization-grant-type}")
 	private String grantType;
 
-	@Value("${keycloak.realm}")
-	private String realm;
+	@Override
+	public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+		UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
+				() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
 
-	@Value("${keycloak.auth-server-url}")
-	private String serverUrl;
+//		Set<GrantedAuthority> authorities = user.getRoles().stream()
+//				.map((role) -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toSet());
 
-	public void saveUser(UserEntity user) {
+		return new User(user.getEmail(), user.getPassword(), null);
+	}
+
+	public void saveUser(UserEntity user) throws ServiceException {
+
+		// add check for username exists in a DB
+		if (userRepository.existsByUsername(user.getUsername())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		// add check for email exists in DB
+		if (userRepository.existsByEmail(user.getEmail())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		// add check for email exists in DB
+		if (user.getEmployeeId() != null && userRepository.existsByEmployeeId(user.getEmployeeId())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
 		String password = user.getPassword();
 		String encodedPassword = passwordEncoder.encode(password);
 		user.setPassword(encodedPassword);
-		userRepository.save(user);
 
-		// Add to keycloak
-		Keycloak keycloak = KeycloakBuilder.builder().serverUrl(serverUrl).realm("master").clientId("admin-cli")
-				.clientSecret(clientSecret).username("admin") // Admin username
-				.password("admin") // Admin password
-				.build();
-
-		RealmResource realmResource = keycloak.realm(realm);
+		RealmResource realmResource = keyCloackUtil.getRealm();
 		UsersResource usersResource = realmResource.users();
 
 		UserRepresentation newUser = new UserRepresentation();
@@ -99,24 +123,75 @@ public class UserService implements UserDetailsService {
 		newUser.setEnabled(true);
 
 		// Set the user's password
-		CredentialRepresentation passwordCred = new CredentialRepresentation();
-		passwordCred.setType(CredentialRepresentation.PASSWORD);
-		passwordCred.setValue(password); // Set the desired password
-		passwordCred.setTemporary(false); // Set to false for a permanent password
+		CredentialRepresentation passwordCred = KeyCloackUtil.createPasswordCredentials(password);
 
-		newUser.setCredentials(Arrays.asList(passwordCred));
-		usersResource.create(newUser);
+		newUser.setCredentials(Collections.singletonList(passwordCred));
+		Response response = usersResource.create(newUser);
+		String kcId = CreatedResponseUtil.getCreatedId(response);
+		if (kcId != null) {
+			// Save to the database
+			user.setKeycloackId(kcId);
+			userRepository.save(user);
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
+					LocaleContextHolder.getLocale()));
+		}
 	}
 
-	@Override
-	public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-		UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
-				() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
+	public void update(UserEntity user) throws ServiceException {
+		UserEntity dbUser = getUserById(user.getId());
+		if (dbUser.getKeycloackId() != null) {
+			String password = user.getPassword();
+			String encodedPassword = passwordEncoder.encode(password);
+			user.setPassword(encodedPassword);
 
-		Set<GrantedAuthority> authorities = user.getRoles().stream()
-				.map((role) -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toSet());
+			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
+			UserRepresentation kcUser = new UserRepresentation();
+			kcUser.setUsername(user.getUsername());
+			kcUser.setFirstName(user.getFirstName());
+			kcUser.setLastName(user.getLastName());
+			kcUser.setEmail(user.getEmail());
+			kcUser.setEmailVerified(true);
+			kcUser.setEnabled(true);
+			kcUser.setCredentials(Collections.singletonList(credential));
 
-		return new User(user.getEmail(), user.getPassword(), authorities);
+			UsersResource usersResource = keyCloackUtil.getRealm().users();
+			usersResource.get(user.getKeycloackId()).update(kcUser);
+
+			userRepository.save(user);
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
+		}
+	}
+
+	public void delete(Long id) throws ServiceException {
+		UserEntity dbUser = getUserById(id);
+		if (dbUser.getKeycloackId() != null) {
+			UsersResource usersResource = keyCloackUtil.getRealm().users();
+			usersResource.get(dbUser.getKeycloackId()).remove();
+
+			dbUser.setIsDeleted(true);
+			userRepository.save(dbUser);
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+					new Object[] { id }, LocaleContextHolder.getLocale()));
+		}
+	}
+
+	public UserEntity getUserById(Long id) throws ServiceException {
+		if (id == null) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_ID, new Object[] { id },
+					LocaleContextHolder.getLocale()));
+		}
+
+		Optional<UserEntity> user = userRepository.findById(id);
+		if (user.isPresent() && !user.get().getIsDeleted()) {
+			return user.get();
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+					new Object[] { id }, LocaleContextHolder.getLocale()));
+		}
 	}
 
 	public LoginResponseDTO login(LoginDTO loginDTO) {
@@ -171,18 +246,6 @@ public class UserService implements UserDetailsService {
 		ResponseEntity<InstrospectResponseDTO> response = restTemplate.postForEntity(instrospectUrl, httpEntity,
 				InstrospectResponseDTO.class);
 		return response.getBody();
-	}
-
-	public void delete(Long id) {
-		userRepository.deleteById(id);
-	}
-
-	public void update(UserEntity user) {
-		userRepository.save(user);
-	}
-
-	public Optional<UserEntity> getUserById(Long id) {
-		return userRepository.findById(id);
 	}
 
 }

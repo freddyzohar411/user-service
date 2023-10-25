@@ -14,26 +14,35 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 @Setter
 @Getter
 @Entity
-@Table(name = "roles", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
-public class RoleEntity {
+@Table(name = "roles", uniqueConstraints = { @UniqueConstraint(columnNames = { "role_name" }) })
+public class RoleEntity extends BaseEntity {
+
+	private static final long serialVersionUID = 2991860491601656766L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
 
-	@Column(length = 60)
-	private String name;
+	@NotNull(message = "Role name cannot be empty")
+	@Column(name = "role_name")
+	private String roleName;
 
-	@Column(name = "is_active")
-	private Boolean isActive;
+	@NotNull(message = "Role description cannot be empty")
+	@Column(name = "role_description")
+	private String roleDescription;
 
 	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@JoinTable(name = "roles_permissions", joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))
+	@JoinTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))
 	private Set<PermissionEntity> permissions;
+
+	@ManyToMany(mappedBy = "roleEntities")
+	private Set<UserGroupEntity> groupEntities;
+
 }
