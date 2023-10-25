@@ -22,7 +22,9 @@ import lombok.Setter;
 @Getter
 @Entity
 @Table(name = "user_group", uniqueConstraints = { @UniqueConstraint(columnNames = { "user_group_name" }) })
-public class UserGroupEntity {
+public class UserGroupEntity extends BaseEntity {
+
+	private static final long serialVersionUID = -19569507092908100L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

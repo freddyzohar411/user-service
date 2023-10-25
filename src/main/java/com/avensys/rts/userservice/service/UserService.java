@@ -156,8 +156,8 @@ public class UserService implements UserDetailsService {
 			kcUser.setCredentials(Collections.singletonList(credential));
 
 			UsersResource usersResource = keyCloackUtil.getRealm().users();
-			usersResource.get(user.getKeycloackId()).update(kcUser);
-
+			usersResource.get(dbUser.getKeycloackId()).update(kcUser);
+			user.setKeycloackId(dbUser.getKeycloackId());
 			userRepository.save(user);
 		} else {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
