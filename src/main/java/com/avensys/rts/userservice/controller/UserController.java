@@ -1,5 +1,7 @@
 package com.avensys.rts.userservice.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -125,6 +127,12 @@ public class UserController {
 		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
 		}
+	}
+
+	@GetMapping()
+	public ResponseEntity<?> findAll() {
+		List<UserEntity> users = userService.fetchList();
+		return ResponseUtil.generateSuccessResponse(users, HttpStatus.OK, null);
 	}
 
 }

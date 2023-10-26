@@ -2,6 +2,7 @@ package com.avensys.rts.userservice.service;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -198,6 +199,10 @@ public class UserService implements UserDetailsService {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
 					new Object[] { id }, LocaleContextHolder.getLocale()));
 		}
+	}
+
+	public List<UserEntity> fetchList() {
+		return (List<UserEntity>) userRepository.findAll();
 	}
 
 	public LoginResponseDTO login(LoginDTO loginDTO) {
