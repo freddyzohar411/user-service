@@ -200,6 +200,17 @@ public class UserService implements UserDetailsService {
 		}
 	}
 
+	/**
+	 * Get user by username
+	 * @param email
+	 * @return
+	 */
+	public UserEntity getUserByEmail(String email) {
+		UserEntity user = userRepository.findByEmail(email).orElseThrow(
+				() -> new UsernameNotFoundException("User with email %s not found".formatted(email)));
+		return user;
+	}
+
 	public LoginResponseDTO login(LoginDTO loginDTO) {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);

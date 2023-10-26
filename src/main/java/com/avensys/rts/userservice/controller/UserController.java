@@ -127,4 +127,9 @@ public class UserController {
 		}
 	}
 
+	@GetMapping("")
+	public ResponseEntity<Object> getUserByEmail(@RequestParam("email") String email) {
+		return ResponseUtil.generateSuccessResponse(userService.getUserByEmail(email), HttpStatus.OK, null);
+	}
+
 }
