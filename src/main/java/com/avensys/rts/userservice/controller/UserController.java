@@ -123,7 +123,8 @@ public class UserController {
 	public ResponseEntity<?> find(@PathVariable("id") Long id) {
 		try {
 			UserEntity user = userService.getUserById(id);
-			return ResponseUtil.generateSuccessResponse(user, HttpStatus.OK, null);
+			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(user), HttpStatus.OK,
+					null);
 		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
 		}
@@ -132,7 +133,8 @@ public class UserController {
 	@GetMapping()
 	public ResponseEntity<?> findAll() {
 		List<UserEntity> users = userService.fetchList();
-		return ResponseUtil.generateSuccessResponse(users, HttpStatus.OK, null);
+		return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntityListtoResponse(users), HttpStatus.OK,
+				null);
 	}
 
 }

@@ -18,11 +18,9 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
 import lombok.Setter;
 
 @Setter
-@Getter
 @Entity
 @Table(name = "roles", uniqueConstraints = { @UniqueConstraint(columnNames = { "role_name" }) })
 public class RoleEntity extends BaseEntity {
@@ -48,5 +46,25 @@ public class RoleEntity extends BaseEntity {
 	@ManyToMany(mappedBy = "roleEntities")
 	@JsonProperty(access = Access.WRITE_ONLY)
 	private Set<UserGroupEntity> groupEntities;
+
+	public Long getId() {
+		return id;
+	}
+
+	public String getRoleName() {
+		return roleName;
+	}
+
+	public String getRoleDescription() {
+		return roleDescription;
+	}
+
+	public Set<ModuleEntity> getModules() {
+		return modules;
+	}
+
+	public Set<UserGroupEntity> getGroupEntities() {
+		return groupEntities;
+	}
 
 }
