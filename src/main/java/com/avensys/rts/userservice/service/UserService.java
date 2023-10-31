@@ -2,6 +2,7 @@ package com.avensys.rts.userservice.service;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -200,6 +201,7 @@ public class UserService implements UserDetailsService {
 		}
 	}
 
+
 	/**
 	 * Get user by username
 	 * @param email
@@ -209,6 +211,10 @@ public class UserService implements UserDetailsService {
 		UserEntity user = userRepository.findByEmail(email).orElseThrow(
 				() -> new UsernameNotFoundException("User with email %s not found".formatted(email)));
 		return user;
+	}
+
+	public List<UserEntity> fetchList() {
+		return (List<UserEntity>) userRepository.findAll();
 	}
 
 	public LoginResponseDTO login(LoginDTO loginDTO) {

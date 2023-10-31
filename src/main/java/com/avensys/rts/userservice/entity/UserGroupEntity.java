@@ -39,6 +39,10 @@ public class UserGroupEntity extends BaseEntity {
 	private String userGroupDescription;
 
 	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	@JoinTable(name = "user_group_intersaction", joinColumns = @JoinColumn(name = "user_group_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
+	private Set<UserEntity> users;
+
+	@ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@JoinTable(name = "user_group_roles", joinColumns = @JoinColumn(name = "user_group_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
 	private Set<RoleEntity> roleEntities;
 

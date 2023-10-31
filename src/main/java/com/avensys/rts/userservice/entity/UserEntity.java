@@ -1,5 +1,7 @@
 package com.avensys.rts.userservice.entity;
 
+import java.util.Set;
+
 import org.hibernate.validator.constraints.Length;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Email;
@@ -73,5 +76,9 @@ public class UserEntity extends BaseEntity {
 
 	@Column(name = "enabled")
 	private Boolean enabled = true;
+
+	@ManyToMany(mappedBy = "users")
+	@JsonProperty(access = Access.WRITE_ONLY)
+	private Set<UserGroupEntity> groupEntities;
 
 }
