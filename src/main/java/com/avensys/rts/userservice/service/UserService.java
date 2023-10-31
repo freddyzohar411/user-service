@@ -207,11 +207,11 @@ public class UserService implements UserDetailsService {
 	 * @param email
 	 * @return
 	 */
-	public UserEntity getUserByEmail(String email) {
-		UserEntity user = userRepository.findByEmail(email).orElseThrow(
-				() -> new UsernameNotFoundException("User with email %s not found".formatted(email)));
-		return user;
-	}
+//	public UserEntity getUserByEmail(String email) {
+//		UserEntity user = userRepository.findByEmail(email).orElseThrow(
+//				() -> new UsernameNotFoundException("User with email %s not found".formatted(email)));
+//		return user;
+//	}
 
 	public List<UserEntity> fetchList() {
 		return (List<UserEntity>) userRepository.findAll();
