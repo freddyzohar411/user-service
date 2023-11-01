@@ -2,6 +2,7 @@ package com.avensys.rts.userservice.controller;
 
 import java.util.List;
 
+import com.avensys.rts.userservice.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -10,16 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
@@ -44,6 +36,20 @@ public class UserController {
 
 	@Autowired
 	private MessageSource messageSource;
+
+//	@PostMapping("/signin")
+//	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
+//		Authentication authenticate = authenticationManager
+//				.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
+//		if (authenticate.isAuthenticated()) {
+//			LoginResponseDTO response = userService.login(loginDTO);
+//
+//			return new ResponseEntity<>(response, HttpStatus.OK);
+//		} else {
+//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource
+//					.getMessage(MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
+//		}
+//	}
 
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
@@ -130,12 +136,27 @@ public class UserController {
 		}
 	}
 
-	@GetMapping()
+	@GetMapping("/all")
 	public ResponseEntity<?> findAll() {
 		List<UserEntity> users = userService.fetchList();
 		return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntityListtoResponse(users), HttpStatus.OK,
 				null);
 
+	}
+
+	@GetMapping("")
+	public ResponseEntity<Object> getUserByEmail(@RequestParam("email") String email) {
+		return ResponseUtil.generateSuccessResponse(userService.getUserByEmail(email), HttpStatus.OK, messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
+	}
+
+	@GetMapping("/email/{email}")
+	public ResponseEntity<Object> getUserDetailByEmail(@PathVariable("email") String email) {
+		return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(userService.getUserByEmail(email)), HttpStatus.OK, messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
+	}
+
+	@GetMapping("/profile")
+	public ResponseEntity<Object> getUserDetail() {
+		return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(userService.getUserDetail()), HttpStatus.OK, messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
 	}
 
 }

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.avensys.rts.userservice.util.JwtUtil;
+import com.avensys.rts.userservice.util.ResponseUtil;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -48,227 +50,244 @@ import jakarta.ws.rs.core.Response;
 @Service
 public class UserService implements UserDetailsService {
 
-	@Autowired
-	private RestTemplate restTemplate;
+    @Autowired
+    private RestTemplate restTemplate;
 
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-	@Autowired
-	private UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-	@Autowired
-	private KeyCloackUtil keyCloackUtil;
+    @Autowired
+    private KeyCloackUtil keyCloackUtil;
 
-	@Autowired
-	private MessageSource messageSource;
+    @Autowired
+    private JwtUtil jwtUtil;
 
-	@Value("${spring.security.oauth2.client.provider.keycloak.token-uri}")
-	private String tokenUrl;
+    @Autowired
+    private MessageSource messageSource;
 
-	@Value("${spring.security.oauth2.client.provider.keycloak.end-session-uri}")
-	private String endSessionUrl;
+    @Value("${spring.security.oauth2.client.provider.keycloak.token-uri}")
+    private String tokenUrl;
 
-	@Value("${spring.security.oauth2.client.provider.keycloak.instrospect-uri}")
-	private String instrospectUrl;
+    @Value("${spring.security.oauth2.client.provider.keycloak.end-session-uri}")
+    private String endSessionUrl;
 
-	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.client-id}")
-	private String clientId;
+    @Value("${spring.security.oauth2.client.provider.keycloak.instrospect-uri}")
+    private String instrospectUrl;
 
-	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.client-secret}")
-	private String clientSecret;
+    @Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.client-id}")
+    private String clientId;
 
-	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.authorization-grant-type}")
-	private String grantType;
+    @Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.client-secret}")
+    private String clientSecret;
 
-	@Override
-	public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-		UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
-				() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
+    @Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.authorization-grant-type}")
+    private String grantType;
 
-		Set<GrantedAuthority> authorities = new HashSet<>();
-		authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    @Override
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
+                () -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
+
+        Set<GrantedAuthority> authorities = new HashSet<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
 //		Set<GrantedAuthority> authorities = list.map((role) -> new SimpleGrantedAuthority(role.getName()))
 //				.collect(Collectors.toSet());
-		return new User(user.getEmail(), user.getPassword(), authorities);
-	}
+        return new User(user.getEmail(), user.getPassword(), authorities);
+    }
 
-	public void saveUser(UserEntity user) throws ServiceException {
+    public void saveUser(UserEntity user) throws ServiceException {
 
-		// add check for username exists in a DB
-		if (userRepository.existsByUsername(user.getUsername())) {
-			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
-					LocaleContextHolder.getLocale()));
-		}
+        // add check for username exists in a DB
+        if (userRepository.existsByUsername(user.getUsername())) {
+            throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
+                    LocaleContextHolder.getLocale()));
+        }
 
-		// add check for email exists in DB
-		if (userRepository.existsByEmail(user.getEmail())) {
-			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
-					LocaleContextHolder.getLocale()));
-		}
+        // add check for email exists in DB
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
+                    LocaleContextHolder.getLocale()));
+        }
 
-		// add check for email exists in DB
-		if (user.getEmployeeId() != null && userRepository.existsByEmployeeId(user.getEmployeeId())) {
-			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
-					LocaleContextHolder.getLocale()));
-		}
+        // add check for email exists in DB
+        if (user.getEmployeeId() != null && userRepository.existsByEmployeeId(user.getEmployeeId())) {
+            throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
+                    LocaleContextHolder.getLocale()));
+        }
 
-		String password = user.getPassword();
-		String encodedPassword = passwordEncoder.encode(password);
-		user.setPassword(encodedPassword);
+        String password = user.getPassword();
+        String encodedPassword = passwordEncoder.encode(password);
+        user.setPassword(encodedPassword);
 
-		RealmResource realmResource = keyCloackUtil.getRealm();
-		UsersResource usersResource = realmResource.users();
+        RealmResource realmResource = keyCloackUtil.getRealm();
+        UsersResource usersResource = realmResource.users();
 
-		UserRepresentation newUser = new UserRepresentation();
-		newUser.setUsername(user.getUsername());
-		newUser.setFirstName(user.getFirstName());
-		newUser.setLastName(user.getLastName());
-		newUser.setEmail(user.getEmail());
-		newUser.setEmailVerified(true);
-		newUser.setEnabled(true);
+        UserRepresentation newUser = new UserRepresentation();
+        newUser.setUsername(user.getUsername());
+        newUser.setFirstName(user.getFirstName());
+        newUser.setLastName(user.getLastName());
+        newUser.setEmail(user.getEmail());
+        newUser.setEmailVerified(true);
+        newUser.setEnabled(true);
 
-		// Set the user's password
-		CredentialRepresentation passwordCred = KeyCloackUtil.createPasswordCredentials(password);
+        // Set the user's password
+        CredentialRepresentation passwordCred = KeyCloackUtil.createPasswordCredentials(password);
 
-		newUser.setCredentials(Collections.singletonList(passwordCred));
-		Response response = usersResource.create(newUser);
-		String kcId = CreatedResponseUtil.getCreatedId(response);
-		if (kcId != null) {
-			// Save to the database
-			user.setKeycloackId(kcId);
-			userRepository.save(user);
-		} else {
-			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
-					LocaleContextHolder.getLocale()));
-		}
-	}
+        newUser.setCredentials(Collections.singletonList(passwordCred));
+        Response response = usersResource.create(newUser);
+        String kcId = CreatedResponseUtil.getCreatedId(response);
+        if (kcId != null) {
+            // Save to the database
+            user.setKeycloackId(kcId);
+            userRepository.save(user);
+        } else {
+            throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
+                    LocaleContextHolder.getLocale()));
+        }
+    }
 
-	public void update(UserEntity user) throws ServiceException {
-		UserEntity dbUser = getUserById(user.getId());
-		if (dbUser.getKeycloackId() != null) {
-			String password = user.getPassword();
-			String encodedPassword = passwordEncoder.encode(password);
-			user.setPassword(encodedPassword);
+    public void update(UserEntity user) throws ServiceException {
+        UserEntity dbUser = getUserById(user.getId());
+        if (dbUser.getKeycloackId() != null) {
+            String password = user.getPassword();
+            String encodedPassword = passwordEncoder.encode(password);
+            user.setPassword(encodedPassword);
 
-			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
-			UserRepresentation kcUser = new UserRepresentation();
-			kcUser.setUsername(user.getUsername());
-			kcUser.setFirstName(user.getFirstName());
-			kcUser.setLastName(user.getLastName());
-			kcUser.setEmail(user.getEmail());
-			kcUser.setEmailVerified(true);
-			kcUser.setEnabled(true);
-			kcUser.setCredentials(Collections.singletonList(credential));
+            CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
+            UserRepresentation kcUser = new UserRepresentation();
+            kcUser.setUsername(user.getUsername());
+            kcUser.setFirstName(user.getFirstName());
+            kcUser.setLastName(user.getLastName());
+            kcUser.setEmail(user.getEmail());
+            kcUser.setEmailVerified(true);
+            kcUser.setEnabled(true);
+            kcUser.setCredentials(Collections.singletonList(credential));
 
-			UsersResource usersResource = keyCloackUtil.getRealm().users();
-			usersResource.get(dbUser.getKeycloackId()).update(kcUser);
-			user.setKeycloackId(dbUser.getKeycloackId());
-			userRepository.save(user);
-		} else {
-			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
-					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
-		}
-	}
+            UsersResource usersResource = keyCloackUtil.getRealm().users();
+            usersResource.get(dbUser.getKeycloackId()).update(kcUser);
+            user.setKeycloackId(dbUser.getKeycloackId());
+            userRepository.save(user);
+        } else {
+            throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+                    new Object[]{user.getId()}, LocaleContextHolder.getLocale()));
+        }
+    }
 
-	public void delete(Long id) throws ServiceException {
-		UserEntity dbUser = getUserById(id);
-		if (dbUser.getKeycloackId() != null) {
-			UsersResource usersResource = keyCloackUtil.getRealm().users();
-			usersResource.get(dbUser.getKeycloackId()).remove();
+    public void delete(Long id) throws ServiceException {
+        UserEntity dbUser = getUserById(id);
+        if (dbUser.getKeycloackId() != null) {
+            UsersResource usersResource = keyCloackUtil.getRealm().users();
+            usersResource.get(dbUser.getKeycloackId()).remove();
 
-			dbUser.setIsDeleted(true);
-			userRepository.save(dbUser);
-		} else {
-			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
-					new Object[] { id }, LocaleContextHolder.getLocale()));
-		}
-	}
+            dbUser.setIsDeleted(true);
+            userRepository.save(dbUser);
+        } else {
+            throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+                    new Object[]{id}, LocaleContextHolder.getLocale()));
+        }
+    }
 
-	public UserEntity getUserById(Long id) throws ServiceException {
-		if (id == null) {
-			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_ID, new Object[] { id },
-					LocaleContextHolder.getLocale()));
-		}
+    public UserEntity getUserById(Long id) throws ServiceException {
+        if (id == null) {
+            throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_ID, new Object[]{id},
+                    LocaleContextHolder.getLocale()));
+        }
 
-		Optional<UserEntity> user = userRepository.findById(id);
-		if (user.isPresent() && !user.get().getIsDeleted()) {
-			return user.get();
-		} else {
-			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
-					new Object[] { id }, LocaleContextHolder.getLocale()));
-		}
-	}
+        Optional<UserEntity> user = userRepository.findById(id);
+        if (user.isPresent() && !user.get().getIsDeleted()) {
+            return user.get();
+        } else {
+            throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+                    new Object[]{id}, LocaleContextHolder.getLocale()));
+        }
+    }
 
 
-	/**
-	 * Get user by username
-	 * @param email
-	 * @return
-	 */
-//	public UserEntity getUserByEmail(String email) {
-//		UserEntity user = userRepository.findByEmail(email).orElseThrow(
-//				() -> new UsernameNotFoundException("User with email %s not found".formatted(email)));
-//		return user;
-//	}
+    /**
+     * Get user by username
+     *
+     * @param email
+     * @return
+     */
+    public UserEntity getUserByEmail(String email) {
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(
+                () -> new UsernameNotFoundException("User with email %s not found".formatted(email)));
+        return user;
+    }
 
-	public List<UserEntity> fetchList() {
-		return (List<UserEntity>) userRepository.findAll();
-	}
+    public List<UserEntity> fetchList() {
+        return (List<UserEntity>) userRepository.findAll();
+    }
 
-	public LoginResponseDTO login(LoginDTO loginDTO) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    public LoginResponseDTO login(LoginDTO loginDTO) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.add("client_id", clientId);
-		map.add("client_secret", clientSecret);
-		map.add("grant_type", grantType);
-		map.add("username", loginDTO.getUsername());
-		map.add("password", loginDTO.getPassword());
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.add("client_id", clientId);
+        map.add("client_secret", clientSecret);
+        map.add("grant_type", grantType);
+        map.add("username", loginDTO.getUsername());
+        map.add("password", loginDTO.getPassword());
 
-		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
 
-		ResponseEntity<LoginResponseDTO> response = restTemplate.postForEntity(tokenUrl, httpEntity,
-				LoginResponseDTO.class);
-		return response.getBody();
-	}
+        ResponseEntity<LoginResponseDTO> response = restTemplate.postForEntity(tokenUrl, httpEntity,
+                LoginResponseDTO.class);
 
-	public LogoutResponseDTO logout(String refreshToken) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        LoginResponseDTO res = response.getBody();
+        // Get userEnitity from repository
+        UserEntity userEntity = userRepository.findByUsernameOrEmail(loginDTO.getUsername(), loginDTO.getUsername()).orElseThrow(
+                () -> new UsernameNotFoundException("User not found with username or email: " + loginDTO.getUsername()));
+        res.setUser(ResponseUtil.mapUserEntitytoResponse(userEntity));
+        return res;
+    }
 
-		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.add("client_id", clientId);
-		map.add("client_secret", clientSecret);
-		map.add("refresh_token", refreshToken);
+    public LogoutResponseDTO logout(String refreshToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.add("client_id", clientId);
+        map.add("client_secret", clientSecret);
+        map.add("refresh_token", refreshToken);
 
-		ResponseEntity<LogoutResponseDTO> response = restTemplate.postForEntity(endSessionUrl, httpEntity,
-				LogoutResponseDTO.class);
-		LogoutResponseDTO res = new LogoutResponseDTO();
-		if (response.getStatusCode().is2xxSuccessful()) {
-			res.setMessage("Logged out successfully");
-		}
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
 
-		return res;
-	}
+        ResponseEntity<LogoutResponseDTO> response = restTemplate.postForEntity(endSessionUrl, httpEntity,
+                LogoutResponseDTO.class);
+        LogoutResponseDTO res = new LogoutResponseDTO();
+        if (response.getStatusCode().is2xxSuccessful()) {
+            res.setMessage("Logged out successfully");
+        }
 
-	public InstrospectResponseDTO validate(String token) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        return res;
+    }
 
-		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.add("client_id", clientId);
-		map.add("client_secret", clientSecret);
-		map.add("token", token);
+    public InstrospectResponseDTO validate(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
-		ResponseEntity<InstrospectResponseDTO> response = restTemplate.postForEntity(instrospectUrl, httpEntity,
-				InstrospectResponseDTO.class);
-		return response.getBody();
-	}
+        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+        map.add("client_id", clientId);
+        map.add("client_secret", clientSecret);
+        map.add("token", token);
+
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
+        ResponseEntity<InstrospectResponseDTO> response = restTemplate.postForEntity(instrospectUrl, httpEntity,
+                InstrospectResponseDTO.class);
+        return response.getBody();
+    }
+
+    public UserEntity getUserDetail() {
+        String email = JwtUtil.getEmailFromContext();
+        UserEntity user = userRepository.findByUsernameOrEmail(email,email).orElseThrow(
+                () -> new UsernameNotFoundException("User not found"));
+        return user;
+    }
 
 }
