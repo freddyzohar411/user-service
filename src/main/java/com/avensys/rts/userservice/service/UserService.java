@@ -146,8 +146,34 @@ public class UserService implements UserDetailsService {
 	}
 
 	public void update(UserEntity user) throws ServiceException {
-		UserEntity dbUser = getUserById(user.getId());
-		if (dbUser.getKeycloackId() != null) {
+
+		Optional<UserEntity> dbUser = userRepository.findByUsername(user.getUsername());
+
+		// add check for username exists in a DB
+		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		dbUser = userRepository.findByEmail(user.getEmail());
+
+		// add check for email exists in DB
+		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		dbUser = userRepository.findByEmployeeId(user.getEmployeeId());
+
+		// add check for email exists in DB
+		if (dbUser.isPresent() && dbUser.get().getId() != user.getId() && user.getEmployeeId() != null) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		UserEntity userById = getUserById(user.getId());
+
+		if (userById.getKeycloackId() != null) {
 			String password = user.getPassword();
 			String encodedPassword = passwordEncoder.encode(password);
 			user.setPassword(encodedPassword);
@@ -163,11 +189,11 @@ public class UserService implements UserDetailsService {
 			kcUser.setCredentials(Collections.singletonList(credential));
 
 			UsersResource usersResource = keyCloackUtil.getRealm().users();
-			usersResource.get(dbUser.getKeycloackId()).update(kcUser);
-			user.setKeycloackId(dbUser.getKeycloackId());
+			usersResource.get(userById.getKeycloackId()).update(kcUser);
+			user.setKeycloackId(userById.getKeycloackId());
 			userRepository.save(user);
 		} else {
-			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
 					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
 		}
 	}

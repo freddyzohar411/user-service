@@ -47,7 +47,7 @@ public class ModuleEntity extends BaseEntity {
 	@JoinTable(name = "module_permissions", joinColumns = @JoinColumn(name = "module_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))
 	private Set<PermissionEntity> permissions;
 
-	@ManyToMany(mappedBy = "modules")
+	@ManyToMany(mappedBy = "modules", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JsonProperty(access = Access.WRITE_ONLY)
 	private Set<RoleEntity> roleEntities;
 }
