@@ -37,20 +37,6 @@ public class UserController {
     @Autowired
     private MessageSource messageSource;
 
-//	@PostMapping("/signin")
-//	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
-//		Authentication authenticate = authenticationManager
-//				.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
-//		if (authenticate.isAuthenticated()) {
-//			LoginResponseDTO response = userService.login(loginDTO);
-//
-//			return new ResponseEntity<>(response, HttpStatus.OK);
-//		} else {
-//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource
-//					.getMessage(MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
-//		}
-//	}
-
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
         Authentication authenticate = authenticationManager

@@ -48,19 +48,17 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true; // Allow the request to continue without token validation
         }
 
-
         // Get token from header from axios
         String authorizationHeader = request.getHeader("Authorization");
 
-//
         log.info("Authorization Header: {}", authorizationHeader);
-//
+
         // Check if token is present
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             throw new RuntimeException("Missing Authorization Header");
         }
 
-//        // Get the token string
+        // Get the token string
         String token = authorizationHeader.substring(7);
 
         // Validate JWT with the public key from keycloak
@@ -80,7 +78,6 @@ public class AuthInterceptor implements HandlerInterceptor {
             requestAttributes.setAttribute("roles", roles, RequestAttributes.SCOPE_REQUEST);
             requestAttributes.setAttribute("token", token, RequestAttributes.SCOPE_REQUEST);
         }
-
         return true; // Continue the request processing chain
     }
 
