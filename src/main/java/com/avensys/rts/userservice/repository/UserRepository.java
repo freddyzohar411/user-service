@@ -1,7 +1,9 @@
 package com.avensys.rts.userservice.repository;
 
+import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,10 +18,15 @@ public interface UserRepository extends CrudRepository<UserEntity, Long> {
 
 	Optional<UserEntity> findByUsername(String username);
 
+	Optional<UserEntity> findByEmployeeId(String employeeId);
+
 	Boolean existsByUsername(String username);
 
 	Boolean existsByEmail(String email);
 
 	Boolean existsByEmployeeId(String employeeId);
+	
+	@Query(value = "SELECT group FROM UserEntity group WHERE group.isDeleted = ?1")
+	List<UserEntity> findAllAndIsDeleted(boolean isDeleted);
 
 }
