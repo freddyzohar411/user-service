@@ -7,8 +7,10 @@ import org.hibernate.validator.constraints.Length;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -77,7 +79,7 @@ public class UserEntity extends BaseEntity {
 	@Column(name = "enabled")
 	private Boolean enabled = true;
 
-	@ManyToMany(mappedBy = "users")
+	@ManyToMany(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JsonProperty(access = Access.WRITE_ONLY)
 	private Set<UserGroupEntity> groupEntities;
 

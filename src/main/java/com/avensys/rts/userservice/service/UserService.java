@@ -150,12 +150,43 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public void update(UserEntity user) throws ServiceException {
-        UserEntity dbUser = getUserById(user.getId());
-        if (dbUser.getKeycloackId() != null) {
-            String password = user.getPassword();
-            String encodedPassword = passwordEncoder.encode(password);
-            user.setPassword(encodedPassword);
+
+	public void update(UserEntity user) throws ServiceException {
+
+		Optional<UserEntity> dbUser = userRepository.findByUsername(user.getUsername());
+
+		// add check for username exists in a DB
+		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		dbUser = userRepository.findByEmail(user.getEmail());
+
+		// add check for email exists in DB
+		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		dbUser = userRepository.findByEmployeeId(user.getEmployeeId());
+
+		// add check for email exists in DB
+		if (dbUser.isPresent() && dbUser.get().getId() != user.getId() && user.getEmployeeId() != null) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		UserEntity userById = getUserById(user.getId());
+
+		if (userById.getKeycloackId() != null) {
+			String password = userById.getPassword();
+
+			if (user.getPassword() != null && user.getPassword().length() > 0) {
+				String encodedPassword = passwordEncoder.encode(user.getPassword());
+				password = encodedPassword;
+				userById.setPassword(password);
+			}
 
             CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
             UserRepresentation kcUser = new UserRepresentation();
@@ -167,15 +198,28 @@ public class UserService implements UserDetailsService {
             kcUser.setEnabled(true);
             kcUser.setCredentials(Collections.singletonList(credential));
 
-            UsersResource usersResource = keyCloackUtil.getRealm().users();
-            usersResource.get(dbUser.getKeycloackId()).update(kcUser);
-            user.setKeycloackId(dbUser.getKeycloackId());
-            userRepository.save(user);
-        } else {
-            throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
-                    new Object[]{user.getId()}, LocaleContextHolder.getLocale()));
-        }
-    }
+
+			UsersResource usersResource = keyCloackUtil.getRealm().users();
+			usersResource.get(userById.getKeycloackId()).update(kcUser);
+			usersResource.get(userById.getKeycloackId()).resetPassword(credential);
+			user.setKeycloackId(userById.getKeycloackId());
+
+			userById.setFirstName(user.getFirstName());
+			userById.setLastName(user.getLastName());
+			userById.setUsername(user.getUsername());
+			userById.setEmail(user.getEmail());
+			userById.setMobile(user.getMobile());
+
+			if (user.getEmployeeId() != null) {
+				userById.setEmployeeId(user.getEmployeeId());
+			}
+
+			userRepository.save(userById);
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
+					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
+		}
+	}
 
     public void delete(Long id) throws ServiceException {
         UserEntity dbUser = getUserById(id);
@@ -219,9 +263,9 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
-    public List<UserEntity> fetchList() {
-        return (List<UserEntity>) userRepository.findAll();
-    }
+	public List<UserEntity> fetchList() {
+		return (List<UserEntity>) userRepository.findAllAndIsDeleted(false);
+	}
 
     public LoginResponseDTO login(LoginDTO loginDTO) {
         HttpHeaders headers = new HttpHeaders();
