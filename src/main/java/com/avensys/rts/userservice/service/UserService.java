@@ -174,9 +174,13 @@ public class UserService implements UserDetailsService {
 		UserEntity userById = getUserById(user.getId());
 
 		if (userById.getKeycloackId() != null) {
-			String password = user.getPassword();
-			String encodedPassword = passwordEncoder.encode(password);
-			user.setPassword(encodedPassword);
+			String password = userById.getPassword();
+
+			if (user.getPassword() != null && user.getPassword().length() > 0) {
+				String encodedPassword = passwordEncoder.encode(user.getPassword());
+				password = encodedPassword;
+				userById.setPassword(password);
+			}
 
 			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
 			UserRepresentation kcUser = new UserRepresentation();
@@ -190,8 +194,20 @@ public class UserService implements UserDetailsService {
 
 			UsersResource usersResource = keyCloackUtil.getRealm().users();
 			usersResource.get(userById.getKeycloackId()).update(kcUser);
+			usersResource.get(userById.getKeycloackId()).resetPassword(credential);
 			user.setKeycloackId(userById.getKeycloackId());
-			userRepository.save(user);
+
+			userById.setFirstName(user.getFirstName());
+			userById.setLastName(user.getLastName());
+			userById.setUsername(user.getUsername());
+			userById.setEmail(user.getEmail());
+			userById.setMobile(user.getMobile());
+
+			if (user.getEmployeeId() != null) {
+				userById.setEmployeeId(user.getEmployeeId());
+			}
+
+			userRepository.save(userById);
 		} else {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
 					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
@@ -228,7 +244,7 @@ public class UserService implements UserDetailsService {
 	}
 
 	public List<UserEntity> fetchList() {
-		return (List<UserEntity>) userRepository.findAll();
+		return (List<UserEntity>) userRepository.findAllAndIsDeleted(false);
 	}
 
 	public LoginResponseDTO login(LoginDTO loginDTO) {
