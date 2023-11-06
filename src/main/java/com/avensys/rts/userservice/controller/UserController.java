@@ -165,19 +165,18 @@ public class UserController {
     }
 
     @PostMapping("listing")
-    public ResponseEntity<Object> getFormListing(@RequestBody UserListingRequestDTO userListingRequestDTO) {
+    public ResponseEntity<Object> getUserListing(@RequestBody UserListingRequestDTO userListingRequestDTO) {
         Integer page = userListingRequestDTO.getPage();
         Integer pageSize = userListingRequestDTO.getPageSize();
         String sortBy = userListingRequestDTO.getSortBy();
         String sortDirection = userListingRequestDTO.getSortDirection();
         String searchTerm = userListingRequestDTO.getSearchTerm();
         if (searchTerm == null || searchTerm.isEmpty()) {
-            System.out.println(("Test 2"));
-            return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserPageToUserListingResponseDTO(userService.getFormListingPage(page, pageSize, sortBy, sortDirection)),
+            return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserPageToUserListingResponseDTO(userService.getUserListingPage(page, pageSize, sortBy, sortDirection)),
 					HttpStatus.OK,
 					messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
         }
-        return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserPageToUserListingResponseDTO(userService.getFormListingPageWithSearch(page, pageSize, sortBy, sortDirection, searchTerm)),
+        return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserPageToUserListingResponseDTO(userService.getUserListingPageWithSearch(page, pageSize, sortBy, sortDirection, searchTerm)),
                         HttpStatus.OK,
                         messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
     }

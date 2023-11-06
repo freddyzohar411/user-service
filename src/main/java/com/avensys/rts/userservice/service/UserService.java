@@ -341,10 +341,8 @@ public class UserService implements UserDetailsService {
 		return user;
 	}
 
-	public Page<UserEntity> getFormListingPage(Integer page, Integer size, String sortBy, String sortDirection) {
-		System.out.println("Sorting");
+	public Page<UserEntity> getUserListingPage(Integer page, Integer size, String sortBy, String sortDirection) {
 		Sort sort = null;
-		System.out.println("Sort By: " + sortBy);
 		if (sortBy != null) {
 			// Get direction based on sort direction
 			Sort.Direction direction = Sort.DEFAULT_DIRECTION;
@@ -353,8 +351,7 @@ public class UserService implements UserDetailsService {
 			}
 			sort = Sort.by(direction, sortBy);
 		} else {
-//			sort = Sort.by(Sort.Direction.DESC, "updatedAt");
-			sort = Sort.by(Sort.Direction.DESC, "id");
+			sort = Sort.by(Sort.Direction.DESC, "updatedAt");
 		}
 		System.out.println("Test 3");
 		Pageable pageable = null;
@@ -363,13 +360,12 @@ public class UserService implements UserDetailsService {
 		} else {
 			pageable = PageRequest.of(page, size, sort);
 		}
-		Page<UserEntity> usersPage = userRepository.findAllByPaginationAndSort(pageable);
+		Page<UserEntity> usersPage = userRepository.findAllByPaginationAndSort(false, true, pageable);
 		return usersPage;
 	}
 
 
-	public Page<UserEntity> getFormListingPageWithSearch(Integer page, Integer size, String sortBy, String sortDirection, String searchTerm) {
-		System.out.println("Sorting With Search");
+	public Page<UserEntity> getUserListingPageWithSearch(Integer page, Integer size, String sortBy, String sortDirection, String searchTerm) {
 		Sort sort = null;
 		if (sortBy != null) {
 			// Get direction based on sort direction
@@ -392,41 +388,12 @@ public class UserService implements UserDetailsService {
 		// Dynamic search based on custom view (future feature)
 		List<String> customView = List.of("id", "firstName", "lastName", "employeeId");
 
-//		Specification<UserEntity> specification = (root, query, criteriaBuilder) -> {
-//
-//			List<Predicate> predicates = new ArrayList<>();
-//
-//			// Custom fields you want to search in
-//			for (String field : customView) {
-////				if ("baseFormName".equals(field)) {
-////					Join<FormsEntity, FormsEntity> baseJoin = root.join("baseForm", JoinType.LEFT);
-////					predicates.add(criteriaBuilder.like(criteriaBuilder.lower(baseJoin.get("formName")), "%" + searchTerm.toLowerCase() + "%"));
-////				} else {
-//					Path<Object> fieldPath = root.get(field);
-//
-//					if (fieldPath.getJavaType() == Integer.class) {
-//						try {
-//							Integer id = Integer.parseInt(searchTerm);
-//							predicates.add(criteriaBuilder.equal(fieldPath, id));
-//						} catch (NumberFormatException e) {
-//							// Ignore if it's not a valid integer
-//						}
-//					} else {
-//						predicates.add(criteriaBuilder.like(criteriaBuilder.lower(fieldPath.as(String.class)), "%" + searchTerm.toLowerCase() + "%"));
-//					}
-////				}
-//			}
-//			Predicate searchOrPredicates = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
-//
-//			return criteriaBuilder.and(searchOrPredicates);
-//		};
-
-		Page<UserEntity> usersPage = userRepository.findAll(getSpecification(searchTerm,customView), pageable);
+		Page<UserEntity> usersPage = userRepository.findAll(getSpecification(searchTerm,customView, false,true), pageable);
 
 		return usersPage;
 	}
 
-	private Specification<UserEntity> getSpecification(String searchTerm, List<String> customView) {
+	private Specification<UserEntity> getSpecification(String searchTerm, List<String> customView, Boolean isDeleted, Boolean isActive) {
 		return (root, query, criteriaBuilder) -> {
 			List<Predicate> predicates = new ArrayList<>();
 			// Custom fields you want to search in
@@ -442,8 +409,12 @@ public class UserService implements UserDetailsService {
 				} else {
 					predicates.add(criteriaBuilder.like(criteriaBuilder.lower(fieldPath.as(String.class)), "%" + searchTerm.toLowerCase() + "%"));
 				}
-//				}
 			}
+
+			// Add conditions for isDeleted and isActive
+			predicates.add(criteriaBuilder.equal(root.get("isDeleted"), isDeleted)); // Assuming isDeleted is a boolean field
+			predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive)); // Assuming isActive is a boolean field
+
 			Predicate searchOrPredicates = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
 			return criteriaBuilder.and(searchOrPredicates);
 		};

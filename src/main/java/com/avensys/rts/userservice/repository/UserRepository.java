@@ -33,8 +33,8 @@ public interface UserRepository extends CrudRepository<UserEntity, Long>, JpaSpe
 	@Query(value = "SELECT group FROM UserEntity group WHERE group.isDeleted = ?1")
 	List<UserEntity> findAllAndIsDeleted(boolean isDeleted);
 
-	@Query(value = "SELECT u from UserEntity u")
-	Page<UserEntity> findAllByPaginationAndSort(Pageable pageable);
+	@Query(value = "SELECT u from UserEntity u WHERE u.isDeleted = ?1 AND u.isActive = ?2")
+	Page<UserEntity> findAllByPaginationAndSort(Boolean isDeleted, Boolean isActive, Pageable pageable);
 
 	Page<UserEntity> findAll(Specification<UserEntity> specification, Pageable pageable);
 
