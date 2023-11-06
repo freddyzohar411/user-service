@@ -152,7 +152,6 @@ public class UserController {
 		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
 		}
-
 	}
 
 	@GetMapping("/profile")
