@@ -144,7 +144,7 @@ public class UserController {
 	}
 
 	@GetMapping("/email/{email}")
-	public ResponseEntity<Object> getUserByEmail(@RequestParam String email) {
+	public ResponseEntity<Object> getUserByEmail(@PathVariable("email") String email) {
 		try {
 			UserEntity user = userService.getUserByEmail(email);
 			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(user), HttpStatus.OK,
