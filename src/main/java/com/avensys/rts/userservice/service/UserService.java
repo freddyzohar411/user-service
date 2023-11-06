@@ -40,7 +40,9 @@ import com.avensys.rts.userservice.payload.LoginDTO;
 import com.avensys.rts.userservice.payload.LoginResponseDTO;
 import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
+import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
+import com.avensys.rts.userservice.util.ResponseUtil;
 
 import jakarta.ws.rs.core.Response;
 
@@ -59,6 +61,9 @@ public class UserService implements UserDetailsService {
 
 	@Autowired
 	private KeyCloackUtil keyCloackUtil;
+
+	@Autowired
+	private JwtUtil jwtUtil;
 
 	@Autowired
 	private MessageSource messageSource;
@@ -243,11 +248,24 @@ public class UserService implements UserDetailsService {
 		}
 	}
 
+	/**
+	 * Get user by username
+	 *
+	 * @param email
+	 * @return
+	 */
+	public UserEntity getUserByEmail(String email) throws ServiceException {
+		UserEntity user = userRepository.findByEmail(email).orElseThrow(
+				() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_NOT_FOUND,
+						new Object[] { email }, LocaleContextHolder.getLocale())));
+		return user;
+	}
+
 	public List<UserEntity> fetchList() {
 		return (List<UserEntity>) userRepository.findAllAndIsDeleted(false);
 	}
 
-	public LoginResponseDTO login(LoginDTO loginDTO) {
+	public LoginResponseDTO login(LoginDTO loginDTO) throws ServiceException {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -262,7 +280,15 @@ public class UserService implements UserDetailsService {
 
 		ResponseEntity<LoginResponseDTO> response = restTemplate.postForEntity(tokenUrl, httpEntity,
 				LoginResponseDTO.class);
-		return response.getBody();
+
+		LoginResponseDTO res = response.getBody();
+		// Get userEnitity from repository
+		UserEntity userEntity = userRepository.findByUsernameOrEmail(loginDTO.getUsername(), loginDTO.getUsername())
+				.orElseThrow(
+						() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_NOT_FOUND,
+								new Object[] { loginDTO.getUsername() }, LocaleContextHolder.getLocale())));
+		res.setUser(ResponseUtil.mapUserEntitytoResponse(userEntity));
+		return res;
 	}
 
 	public LogoutResponseDTO logout(String refreshToken) {
@@ -280,7 +306,8 @@ public class UserService implements UserDetailsService {
 				LogoutResponseDTO.class);
 		LogoutResponseDTO res = new LogoutResponseDTO();
 		if (response.getStatusCode().is2xxSuccessful()) {
-			res.setMessage("Logged out successfully");
+			res.setMessage(messageSource.getMessage(MessageConstants.USER_LOGOUT_SUCCESS, null,
+					LocaleContextHolder.getLocale()));
 		}
 
 		return res;
@@ -299,6 +326,14 @@ public class UserService implements UserDetailsService {
 		ResponseEntity<InstrospectResponseDTO> response = restTemplate.postForEntity(instrospectUrl, httpEntity,
 				InstrospectResponseDTO.class);
 		return response.getBody();
+	}
+
+	public UserEntity getUserDetail() throws ServiceException {
+		String email = JwtUtil.getEmailFromContext();
+		UserEntity user = userRepository.findByUsernameOrEmail(email, email)
+				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
+						null, LocaleContextHolder.getLocale())));
+		return user;
 	}
 
 }

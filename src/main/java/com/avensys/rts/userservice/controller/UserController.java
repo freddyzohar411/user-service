@@ -49,11 +49,16 @@ public class UserController {
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
 		Authentication authenticate = authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
-		if (authenticate.isAuthenticated()) {
-			LoginResponseDTO response = userService.login(loginDTO);
+		try {
+			if (authenticate.isAuthenticated()) {
+				LoginResponseDTO response = userService.login(loginDTO);
 
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		} else {
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			} else {
+				return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource.getMessage(
+						MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
+			}
+		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource
 					.getMessage(MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
 		}
@@ -135,6 +140,32 @@ public class UserController {
 		List<UserEntity> users = userService.fetchList();
 		return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntityListtoResponse(users), HttpStatus.OK,
 				null);
+
+	}
+
+	@GetMapping("/email/{email}")
+	public ResponseEntity<Object> getUserByEmail(@RequestParam String email) {
+		try {
+			UserEntity user = userService.getUserByEmail(email);
+			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(user), HttpStatus.OK,
+					null);
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
+		}
+
+	}
+
+	@GetMapping("/profile")
+	public ResponseEntity<Object> getUserDetail() {
+
+		try {
+			UserEntity user = userService.getUserDetail();
+			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(user), HttpStatus.OK,
+					null);
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
+		}
+
 	}
 
 }
