@@ -254,9 +254,10 @@ public class UserService implements UserDetailsService {
 	 * @param email
 	 * @return
 	 */
-	public UserEntity getUserByEmail(String email) {
-		UserEntity user = userRepository.findByEmail(email)
-				.orElseThrow(() -> new UsernameNotFoundException("User with email %s not found".formatted(email)));
+	public UserEntity getUserByEmail(String email) throws ServiceException {
+		UserEntity user = userRepository.findByEmail(email).orElseThrow(
+				() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_NOT_FOUND,
+						new Object[] { email }, LocaleContextHolder.getLocale())));
 		return user;
 	}
 
@@ -264,7 +265,7 @@ public class UserService implements UserDetailsService {
 		return (List<UserEntity>) userRepository.findAllAndIsDeleted(false);
 	}
 
-	public LoginResponseDTO login(LoginDTO loginDTO) {
+	public LoginResponseDTO login(LoginDTO loginDTO) throws ServiceException {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -283,8 +284,9 @@ public class UserService implements UserDetailsService {
 		LoginResponseDTO res = response.getBody();
 		// Get userEnitity from repository
 		UserEntity userEntity = userRepository.findByUsernameOrEmail(loginDTO.getUsername(), loginDTO.getUsername())
-				.orElseThrow(() -> new UsernameNotFoundException(
-						"User not found with username or email: " + loginDTO.getUsername()));
+				.orElseThrow(
+						() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_NOT_FOUND,
+								new Object[] { loginDTO.getUsername() }, LocaleContextHolder.getLocale())));
 		res.setUser(ResponseUtil.mapUserEntitytoResponse(userEntity));
 		return res;
 	}
@@ -304,7 +306,8 @@ public class UserService implements UserDetailsService {
 				LogoutResponseDTO.class);
 		LogoutResponseDTO res = new LogoutResponseDTO();
 		if (response.getStatusCode().is2xxSuccessful()) {
-			res.setMessage("Logged out successfully");
+			res.setMessage(messageSource.getMessage(MessageConstants.USER_LOGOUT_SUCCESS, null,
+					LocaleContextHolder.getLocale()));
 		}
 
 		return res;
@@ -325,10 +328,11 @@ public class UserService implements UserDetailsService {
 		return response.getBody();
 	}
 
-	public UserEntity getUserDetail() {
+	public UserEntity getUserDetail() throws ServiceException {
 		String email = JwtUtil.getEmailFromContext();
 		UserEntity user = userRepository.findByUsernameOrEmail(email, email)
-				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
+						null, LocaleContextHolder.getLocale())));
 		return user;
 	}
 

@@ -49,11 +49,16 @@ public class UserController {
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
 		Authentication authenticate = authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
-		if (authenticate.isAuthenticated()) {
-			LoginResponseDTO response = userService.login(loginDTO);
+		try {
+			if (authenticate.isAuthenticated()) {
+				LoginResponseDTO response = userService.login(loginDTO);
 
-			return new ResponseEntity<>(response, HttpStatus.OK);
-		} else {
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			} else {
+				return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource.getMessage(
+						MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
+			}
+		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource
 					.getMessage(MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
 		}
@@ -130,7 +135,7 @@ public class UserController {
 		}
 	}
 
-	@GetMapping("/all")
+	@GetMapping
 	public ResponseEntity<?> findAll() {
 		List<UserEntity> users = userService.fetchList();
 		return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntityListtoResponse(users), HttpStatus.OK,
@@ -138,29 +143,29 @@ public class UserController {
 
 	}
 
-	@GetMapping("")
-	public ResponseEntity<Object> getUserByEmail(@RequestParam(required = false) String email) {
-		if (email == null) {
-			List<UserEntity> users = userService.fetchList();
-			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntityListtoResponse(users), HttpStatus.OK,
-					null);
-		}
-		return ResponseUtil.generateSuccessResponse(userService.getUserByEmail(email), HttpStatus.OK,
-				messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
-	}
-
 	@GetMapping("/email/{email}")
-	public ResponseEntity<Object> getUserDetailByEmail(@PathVariable("email") String email) {
-		return ResponseUtil.generateSuccessResponse(
-				ResponseUtil.mapUserEntitytoResponse(userService.getUserByEmail(email)), HttpStatus.OK,
-				messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
+	public ResponseEntity<Object> getUserByEmail(@RequestParam String email) {
+		try {
+			UserEntity user = userService.getUserByEmail(email);
+			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(user), HttpStatus.OK,
+					null);
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
+		}
+
 	}
 
 	@GetMapping("/profile")
 	public ResponseEntity<Object> getUserDetail() {
-		return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(userService.getUserDetail()),
-				HttpStatus.OK,
-				messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
+
+		try {
+			UserEntity user = userService.getUserDetail();
+			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(user), HttpStatus.OK,
+					null);
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
+		}
+
 	}
 
 }
