@@ -130,7 +130,7 @@ public class UserController {
 		}
 	}
 
-	@GetMapping()
+	@GetMapping
 	public ResponseEntity<?> findAll() {
 		List<UserEntity> users = userService.fetchList();
 		return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntityListtoResponse(users), HttpStatus.OK,
