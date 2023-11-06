@@ -3,15 +3,13 @@ package com.avensys.rts.userservice.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.avensys.rts.userservice.payload.response.*;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.avensys.rts.userservice.entity.RoleEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.payload.response.ModuleResponseDTO;
-import com.avensys.rts.userservice.payload.response.RoleResponseDTO;
-import com.avensys.rts.userservice.payload.response.UserGroupResponseDTO;
-import com.avensys.rts.userservice.payload.response.UserResponseDTO;
 import com.avensys.rts.userservice.response.HttpResponse;
 
 public class ResponseUtil {
@@ -117,6 +115,16 @@ public class ResponseUtil {
 			});
 		}
 		return response;
+	}
+
+	public static UserListingResponseDTO mapUserPageToUserListingResponseDTO(Page<UserEntity> userEntityPage) {
+		UserListingResponseDTO userListingResponseDTO = new UserListingResponseDTO();
+		userListingResponseDTO.setPage(userEntityPage.getNumber());
+		userListingResponseDTO.setPageSize(userEntityPage.getSize());
+		userListingResponseDTO.setTotalElements(userEntityPage.getTotalElements());
+		userListingResponseDTO.setTotalPages(userEntityPage.getTotalPages());
+		userListingResponseDTO.setUsers(mapUserEntityListtoResponse(userEntityPage.getContent()));
+		return userListingResponseDTO;
 	}
 
 }
