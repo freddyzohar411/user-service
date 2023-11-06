@@ -1,6 +1,7 @@
 package com.avensys.rts.userservice.payload;
 
 import com.avensys.rts.userservice.payload.response.UserResponseDTO;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -18,7 +19,5 @@ public class LoginResponseDTO {
 	private String expires_in;
 	private String refresh_expires_in;
 	private String token_type;
-
 	private UserResponseDTO user;
-
 }
