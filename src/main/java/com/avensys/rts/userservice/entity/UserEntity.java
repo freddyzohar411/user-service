@@ -61,13 +61,13 @@ public class UserEntity extends BaseEntity {
 	private String email;
 
 	@NotNull(message = "Password cannot be empty")
-	@Length(min = 7, message = "Password should be at least 7 characters long")
+	@Length(min = 7, message = "Password should be atleast 7 characters long")
 	@Column(name = "password")
 	@JsonProperty(access = Access.WRITE_ONLY)
 	private String password;
 
 	@Column(name = "mobile")
-	@Length(min = 10, message = "Mobile should be at least 10 number long")
+	@Length(min = 10, message = "Password should be atleast 10 number long")
 	private String mobile;
 
 	@Column(name = "employee_id")

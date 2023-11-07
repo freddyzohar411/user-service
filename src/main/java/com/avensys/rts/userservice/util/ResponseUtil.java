@@ -1,18 +1,38 @@
 package com.avensys.rts.userservice.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import com.avensys.rts.userservice.payload.response.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 
+import com.avensys.rts.userservice.entity.ModuleEntity;
+import com.avensys.rts.userservice.entity.PermissionEntity;
 import com.avensys.rts.userservice.entity.RoleEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
+import com.avensys.rts.userservice.payload.response.ModuleResponseDTO;
+import com.avensys.rts.userservice.payload.response.RoleResponseDTO;
+import com.avensys.rts.userservice.payload.response.UserGroupResponseDTO;
+import com.avensys.rts.userservice.payload.response.UserListingResponseDTO;
+import com.avensys.rts.userservice.payload.response.UserResponseDTO;
+import com.avensys.rts.userservice.repository.PermissionRepository;
 import com.avensys.rts.userservice.response.HttpResponse;
 
+@Component
 public class ResponseUtil {
+
+	private static PermissionRepository permissionRepository;
+
+	@Autowired
+	public void setSomeThing(PermissionRepository permissionRepository) {
+		ResponseUtil.permissionRepository = permissionRepository;
+	}
+
 	public static ResponseEntity<Object> generateSuccessResponse(Object dataObject, HttpStatus httpStatus,
 			String message) {
 		HttpResponse httpResponse = new HttpResponse();
@@ -87,16 +107,31 @@ public class ResponseUtil {
 
 		List<ModuleResponseDTO> moduleList = new ArrayList<ModuleResponseDTO>();
 
-		if (role.getModules() != null && role.getModules().size() > 0) {
-			role.getModules().forEach(module -> {
+		Map<Long, String> permissionsMap = new HashMap<Long, String>();
+		Iterable<PermissionEntity> permissionEntities = permissionRepository.findAll();
+
+		if (permissionEntities.spliterator().getExactSizeIfKnown() > 0) {
+			permissionEntities.forEach(per -> {
+				permissionsMap.put(per.getId(), per.getPermissionName());
+			});
+		}
+
+		if (role.getModulePermissions() != null && role.getModulePermissions().size() > 0) {
+			role.getModulePermissions().forEach(modulePermission -> {
+				ModuleEntity module = modulePermission.getModule();
 				ModuleResponseDTO moduleResponseDTO = new ModuleResponseDTO();
 				moduleResponseDTO.setId(module.getId());
 				moduleResponseDTO.setModuleName(module.getModuleName());
+
 				List<String> permissions = new ArrayList<String>();
-				if (module.getPermissions() != null && module.getPermissions().size() > 0) {
-					module.getPermissions().forEach(permission -> {
-						permissions.add(permission.getPermissionName());
-					});
+				if (modulePermission.getPermissions() != null && modulePermission.getPermissions().length() > 0) {
+					String[] permissionIds = modulePermission.getPermissions().split(",");
+					for (int i = 0; i < permissionIds.length; i++) {
+						Long id = Long.parseLong(permissionIds[i]);
+						if (permissionsMap.get(id) != null) {
+							permissions.add(permissionsMap.get(id));
+						}
+					}
 				}
 				moduleResponseDTO.setPermissions(permissions);
 				moduleList.add(moduleResponseDTO);
