@@ -38,5 +38,4 @@ public interface UserRepository extends CrudRepository<UserEntity, Long>, JpaSpe
 
 	Page<UserEntity> findAll(Specification<UserEntity> specification, Pageable pageable);
 
-
 }
