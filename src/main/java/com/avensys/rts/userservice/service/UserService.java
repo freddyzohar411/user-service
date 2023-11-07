@@ -1,11 +1,12 @@
 package com.avensys.rts.userservice.service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -49,6 +50,8 @@ import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
 import com.avensys.rts.userservice.util.ResponseUtil;
 
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.ws.rs.core.Response;
 
 @Transactional
@@ -66,9 +69,6 @@ public class UserService implements UserDetailsService {
 
 	@Autowired
 	private KeyCloackUtil keyCloackUtil;
-
-	@Autowired
-	private JwtUtil jwtUtil;
 
 	@Autowired
 	private MessageSource messageSource;
@@ -127,10 +127,10 @@ public class UserService implements UserDetailsService {
 		String password = user.getPassword();
 		String encodedPassword = passwordEncoder.encode(password);
 		user.setPassword(encodedPassword);
-		
-		// set fields, as this is new user, active = true and  deleted = false
+
+		// set fields, as this is new user, active = true and deleted = false
 		user.setIsActive(Boolean.TRUE);
-		user.setIsDeleted(Boolean.FALSE); 
+		user.setIsDeleted(Boolean.FALSE);
 
 		RealmResource realmResource = keyCloackUtil.getRealm();
 		UsersResource usersResource = realmResource.users();
