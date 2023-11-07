@@ -127,6 +127,10 @@ public class UserService implements UserDetailsService {
 		String password = user.getPassword();
 		String encodedPassword = passwordEncoder.encode(password);
 		user.setPassword(encodedPassword);
+		
+		// set fields, as this is new user, active = true and  deleted = false
+		user.setIsActive(Boolean.TRUE);
+		user.setIsDeleted(Boolean.FALSE); 
 
 		RealmResource realmResource = keyCloackUtil.getRealm();
 		UsersResource usersResource = realmResource.users();
