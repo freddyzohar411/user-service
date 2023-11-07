@@ -393,6 +393,7 @@ public class UserService implements UserDetailsService {
 
 		// Dynamic search based on custom view (future feature)
 		List<String> customView = List.of("lastName", "firstName", "employeeId");
+//		List<String> customView = List.of("firstName", "lastName");
 
 		Page<UserEntity> usersPage = userRepository.findAll(getSpecification(searchTerm, customView, false, true),
 				pageable);
@@ -421,15 +422,18 @@ public class UserService implements UserDetailsService {
 				}
 			}
 
-			// Add conditions for isDeleted and isActive
-			predicates.add(criteriaBuilder.equal(root.get("isDeleted"), isDeleted)); // Assuming isDeleted is a boolean
-//																						// field
-			predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive)); // Assuming isActive is a boolean
-																					// field
-//			Predicate searchOrPredicates = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+			Predicate searchOrPredicates = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
 
-			Predicate searchOrPredicates = criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-			return criteriaBuilder.and(searchOrPredicates);
+			List<Predicate> fixPredicates = new ArrayList<>();
+			// Add conditions for isDeleted and isActive
+			fixPredicates.add(criteriaBuilder.equal(root.get("isDeleted"), isDeleted));
+			fixPredicates.add(criteriaBuilder.equal(root.get("isActive"), isActive));
+
+			// Combine all predicates with AND
+			Predicate finalPredicate = criteriaBuilder.and(searchOrPredicates,
+					criteriaBuilder.and(fixPredicates.toArray(new Predicate[0])));
+
+			return finalPredicate;
 		};
 	}
 
