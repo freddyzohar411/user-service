@@ -2,6 +2,8 @@ package com.avensys.rts.userservice.controller;
 
 import java.util.List;
 
+import com.avensys.rts.userservice.payload.*;
+import com.avensys.rts.userservice.payload.UserListingRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -24,10 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
-import com.avensys.rts.userservice.payload.LoginDTO;
-import com.avensys.rts.userservice.payload.LoginResponseDTO;
-import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.ResponseUtil;
 
@@ -144,7 +142,7 @@ public class UserController {
 	}
 
 	@GetMapping("/email/{email}")
-	public ResponseEntity<Object> getUserByEmail(@PathVariable("email") String email) {
+	public ResponseEntity<Object> getUserByEmail(@PathVariable String email) {
 		try {
 			UserEntity user = userService.getUserByEmail(email);
 			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(user), HttpStatus.OK,
@@ -152,7 +150,6 @@ public class UserController {
 		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
 		}
-
 	}
 
 	@GetMapping("/profile")
@@ -165,7 +162,27 @@ public class UserController {
 		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
 		}
+	}
 
+	@PostMapping("listing")
+	public ResponseEntity<Object> getUserListing(@RequestBody UserListingRequestDTO userListingRequestDTO) {
+		Integer page = userListingRequestDTO.getPage();
+		Integer pageSize = userListingRequestDTO.getPageSize();
+		String sortBy = userListingRequestDTO.getSortBy();
+		String sortDirection = userListingRequestDTO.getSortDirection();
+		String searchTerm = userListingRequestDTO.getSearchTerm();
+		if (searchTerm == null || searchTerm.isEmpty()) {
+			return ResponseUtil.generateSuccessResponse(
+					ResponseUtil.mapUserPageToUserListingResponseDTO(
+							userService.getUserListingPage(page, pageSize, sortBy, sortDirection)),
+					HttpStatus.OK,
+					messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
+		}
+		return ResponseUtil.generateSuccessResponse(
+				ResponseUtil.mapUserPageToUserListingResponseDTO(
+						userService.getUserListingPageWithSearch(page, pageSize, sortBy, sortDirection, searchTerm)),
+				HttpStatus.OK,
+				messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
 	}
 
 }

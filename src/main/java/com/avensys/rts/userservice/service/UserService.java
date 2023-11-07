@@ -1,11 +1,11 @@
 package com.avensys.rts.userservice.service;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -15,6 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -334,6 +339,90 @@ public class UserService implements UserDetailsService {
 				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
 						null, LocaleContextHolder.getLocale())));
 		return user;
+	}
+
+	public Page<UserEntity> getUserListingPage(Integer page, Integer size, String sortBy, String sortDirection) {
+		Sort sort = null;
+		if (sortBy != null) {
+			// Get direction based on sort direction
+			Sort.Direction direction = Sort.DEFAULT_DIRECTION;
+			if (sortDirection != null) {
+				direction = sortDirection.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+			}
+			sort = Sort.by(direction, sortBy);
+		} else {
+			sort = Sort.by(Sort.Direction.DESC, "updatedAt");
+		}
+		System.out.println("Test 3");
+		Pageable pageable = null;
+		if (page == null && size == null) {
+			pageable = PageRequest.of(0, Integer.MAX_VALUE, sort);
+		} else {
+			pageable = PageRequest.of(page, size, sort);
+		}
+		Page<UserEntity> usersPage = userRepository.findAllByPaginationAndSort(false, true, pageable);
+		return usersPage;
+	}
+
+	public Page<UserEntity> getUserListingPageWithSearch(Integer page, Integer size, String sortBy,
+			String sortDirection, String searchTerm) {
+		Sort sort = null;
+		if (sortBy != null) {
+			// Get direction based on sort direction
+			Sort.Direction direction = Sort.DEFAULT_DIRECTION;
+			if (sortDirection != null) {
+				direction = sortDirection.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+			}
+			sort = Sort.by(direction, sortBy);
+		} else {
+			sort = Sort.by(Sort.Direction.DESC, "updatedAt");
+		}
+
+		Pageable pageable = null;
+		if (page == null && size == null) {
+			pageable = PageRequest.of(0, Integer.MAX_VALUE, sort);
+		} else {
+			pageable = PageRequest.of(page, size, sort);
+		}
+
+		// Dynamic search based on custom view (future feature)
+		List<String> customView = List.of("firstName", "lastName", "employeeId");
+
+		Page<UserEntity> usersPage = userRepository.findAll(getSpecification(searchTerm, customView, false, true),
+				pageable);
+
+		return usersPage;
+	}
+
+	private Specification<UserEntity> getSpecification(String searchTerm, List<String> customView, Boolean isDeleted,
+			Boolean isActive) {
+		return (root, query, criteriaBuilder) -> {
+			List<Predicate> predicates = new ArrayList<>();
+			// Custom fields you want to search in
+			for (String field : customView) {
+				Path<Object> fieldPath = root.get(field);
+				if (fieldPath.getJavaType() == Integer.class) {
+					try {
+						Integer id = Integer.parseInt(searchTerm);
+						predicates.add(criteriaBuilder.equal(fieldPath, id));
+					} catch (NumberFormatException e) {
+						// Ignore if it's not a valid integer
+					}
+				} else {
+					predicates.add(criteriaBuilder.like(criteriaBuilder.lower(fieldPath.as(String.class)),
+							"%" + searchTerm.toLowerCase() + "%"));
+				}
+			}
+
+			// Add conditions for isDeleted and isActive
+			predicates.add(criteriaBuilder.equal(root.get("isDeleted"), isDeleted)); // Assuming isDeleted is a boolean
+																						// field
+			predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive)); // Assuming isActive is a boolean
+																					// field
+
+			Predicate searchOrPredicates = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+			return criteriaBuilder.and(searchOrPredicates);
+		};
 	}
 
 }

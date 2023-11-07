@@ -2,10 +2,7 @@ package com.avensys.rts.userservice.payload.response;
 
 import java.util.List;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
@@ -24,4 +21,5 @@ public class UserResponseDTO {
 	private Boolean locked;
 	private Boolean enabled;
 	private List<UserGroupResponseDTO> userGroup;
+
 }
