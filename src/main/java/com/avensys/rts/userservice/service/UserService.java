@@ -370,6 +370,8 @@ public class UserService implements UserDetailsService {
 
 	public Page<UserEntity> getUserListingPageWithSearch(Integer page, Integer size, String sortBy,
 			String sortDirection, String searchTerm) {
+		System.out.println("In Search");
+		System.out.println("Search Term: " + searchTerm);
 		Sort sort = null;
 		if (sortBy != null) {
 			// Get direction based on sort direction
@@ -390,7 +392,7 @@ public class UserService implements UserDetailsService {
 		}
 
 		// Dynamic search based on custom view (future feature)
-		List<String> customView = List.of("firstName", "lastName", "employeeId");
+		List<String> customView = List.of("lastName", "firstName", "employeeId");
 
 		Page<UserEntity> usersPage = userRepository.findAll(getSpecification(searchTerm, customView, false, true),
 				pageable);
@@ -402,6 +404,7 @@ public class UserService implements UserDetailsService {
 			Boolean isActive) {
 		return (root, query, criteriaBuilder) -> {
 			List<Predicate> predicates = new ArrayList<>();
+
 			// Custom fields you want to search in
 			for (String field : customView) {
 				Path<Object> fieldPath = root.get(field);
@@ -420,11 +423,12 @@ public class UserService implements UserDetailsService {
 
 			// Add conditions for isDeleted and isActive
 			predicates.add(criteriaBuilder.equal(root.get("isDeleted"), isDeleted)); // Assuming isDeleted is a boolean
-																						// field
+//																						// field
 			predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive)); // Assuming isActive is a boolean
 																					// field
+//			Predicate searchOrPredicates = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
 
-			Predicate searchOrPredicates = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+			Predicate searchOrPredicates = criteriaBuilder.and(predicates.toArray(new Predicate[0]));
 			return criteriaBuilder.and(searchOrPredicates);
 		};
 	}
