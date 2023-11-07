@@ -388,8 +388,7 @@ public class UserService implements UserDetailsService {
 		}
 
 		// Dynamic search based on custom view (future feature)
-//		List<String> customView = List.of("lastName", "firstName", "employeeId");
-		List<String> customView = List.of("firstName");
+		List<String> customView = List.of("lastName", "firstName", "employeeId");
 
 		Page<UserEntity> usersPage = userRepository.findAll(getSpecification(searchTerm, customView, false, true),
 				pageable);
@@ -401,8 +400,6 @@ public class UserService implements UserDetailsService {
 			Boolean isActive) {
 		return (root, query, criteriaBuilder) -> {
 			List<Predicate> predicates = new ArrayList<>();
-
-
 
 			// Custom fields you want to search in
 			for (String field : customView) {
@@ -425,7 +422,6 @@ public class UserService implements UserDetailsService {
 //																						// field
 			predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive)); // Assuming isActive is a boolean
 																					// field
-
 //			Predicate searchOrPredicates = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
 
 			Predicate searchOrPredicates = criteriaBuilder.and(predicates.toArray(new Predicate[0]));
