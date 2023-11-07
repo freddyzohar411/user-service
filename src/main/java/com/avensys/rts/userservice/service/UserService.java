@@ -364,8 +364,8 @@ public class UserService implements UserDetailsService {
 		return usersPage;
 	}
 
-
-	public Page<UserEntity> getUserListingPageWithSearch(Integer page, Integer size, String sortBy, String sortDirection, String searchTerm) {
+	public Page<UserEntity> getUserListingPageWithSearch(Integer page, Integer size, String sortBy,
+			String sortDirection, String searchTerm) {
 		Sort sort = null;
 		if (sortBy != null) {
 			// Get direction based on sort direction
@@ -388,12 +388,14 @@ public class UserService implements UserDetailsService {
 		// Dynamic search based on custom view (future feature)
 		List<String> customView = List.of("id", "firstName", "lastName", "employeeId");
 
-		Page<UserEntity> usersPage = userRepository.findAll(getSpecification(searchTerm,customView, false,true), pageable);
+		Page<UserEntity> usersPage = userRepository.findAll(getSpecification(searchTerm, customView, false, true),
+				pageable);
 
 		return usersPage;
 	}
 
-	private Specification<UserEntity> getSpecification(String searchTerm, List<String> customView, Boolean isDeleted, Boolean isActive) {
+	private Specification<UserEntity> getSpecification(String searchTerm, List<String> customView, Boolean isDeleted,
+			Boolean isActive) {
 		return (root, query, criteriaBuilder) -> {
 			List<Predicate> predicates = new ArrayList<>();
 			// Custom fields you want to search in
@@ -407,13 +409,16 @@ public class UserService implements UserDetailsService {
 						// Ignore if it's not a valid integer
 					}
 				} else {
-					predicates.add(criteriaBuilder.like(criteriaBuilder.lower(fieldPath.as(String.class)), "%" + searchTerm.toLowerCase() + "%"));
+					predicates.add(criteriaBuilder.like(criteriaBuilder.lower(fieldPath.as(String.class)),
+							"%" + searchTerm.toLowerCase() + "%"));
 				}
 			}
 
 			// Add conditions for isDeleted and isActive
-			predicates.add(criteriaBuilder.equal(root.get("isDeleted"), isDeleted)); // Assuming isDeleted is a boolean field
-			predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive)); // Assuming isActive is a boolean field
+			predicates.add(criteriaBuilder.equal(root.get("isDeleted"), isDeleted)); // Assuming isDeleted is a boolean
+																						// field
+			predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive)); // Assuming isActive is a boolean
+																					// field
 
 			Predicate searchOrPredicates = criteriaBuilder.or(predicates.toArray(new Predicate[0]));
 			return criteriaBuilder.and(searchOrPredicates);

@@ -10,9 +10,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserListingResponseDTO {
-    private Integer totalPages;
-    private Long totalElements;
-    private Integer page;
-    private Integer pageSize;
-    private List<UserResponseDTO> users;
+	private Integer totalPages;
+	private Long totalElements;
+	private Integer page;
+	private Integer pageSize;
+	private List<UserResponseDTO> users;
 }

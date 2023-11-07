@@ -11,9 +11,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserListingRequestDTO {
-    private Integer page = 0;
-    private Integer pageSize = 5;
-    private String sortBy;
-    private String sortDirection;
-    private String searchTerm;
+	private Integer page = 0;
+	private Integer pageSize = 5;
+	private String sortBy;
+	private String sortDirection;
+	private String searchTerm;
 }
