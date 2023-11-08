@@ -216,6 +216,7 @@ public class UserService implements UserDetailsService {
 			userById.setUsername(user.getUsername());
 			userById.setEmail(user.getEmail());
 			userById.setMobile(user.getMobile());
+			userById.setUpdatedBy(user.getUpdatedBy());
 
 			if (user.getEmployeeId() != null) {
 				userById.setEmployeeId(user.getEmployeeId());

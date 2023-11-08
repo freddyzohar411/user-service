@@ -2,8 +2,6 @@ package com.avensys.rts.userservice.controller;
 
 import java.util.List;
 
-import com.avensys.rts.userservice.payload.*;
-import com.avensys.rts.userservice.payload.UserListingRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -19,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
+import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
+import com.avensys.rts.userservice.payload.LoginDTO;
+import com.avensys.rts.userservice.payload.LoginResponseDTO;
+import com.avensys.rts.userservice.payload.LogoutResponseDTO;
+import com.avensys.rts.userservice.payload.UserListingRequestDTO;
 import com.avensys.rts.userservice.service.UserService;
+import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.ResponseUtil;
 
 @CrossOrigin
@@ -42,6 +47,9 @@ public class UserController {
 
 	@Autowired
 	private MessageSource messageSource;
+
+	@Autowired
+	private JwtUtil jwtUtil;
 
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
@@ -89,8 +97,12 @@ public class UserController {
 	}
 
 	@PostMapping
-	public ResponseEntity<?> createUser(@RequestBody UserEntity user) {
+	public ResponseEntity<?> createUser(@RequestBody UserEntity user,
+			@RequestHeader(name = "Authorization") String token) {
 		try {
+			Long userId = jwtUtil.getUserId(token);
+			user.setCreatedBy(userId);
+			user.setUpdatedBy(userId);
 			userService.saveUser(user);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
 					messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));
@@ -101,8 +113,11 @@ public class UserController {
 	}
 
 	@PutMapping
-	public ResponseEntity<?> editUser(@RequestBody UserEntity user) {
+	public ResponseEntity<?> editUser(@RequestBody UserEntity user,
+			@RequestHeader(name = "Authorization") String token) {
 		try {
+			Long userId = jwtUtil.getUserId(token);
+			user.setUpdatedBy(userId);
 			userService.update(user);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
 					messageSource.getMessage(MessageConstants.USER_UPDATED, null, LocaleContextHolder.getLocale()));

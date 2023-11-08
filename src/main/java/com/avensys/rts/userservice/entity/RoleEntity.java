@@ -43,6 +43,7 @@ public class RoleEntity extends BaseEntity {
 
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@JoinColumn(name = "role_id", referencedColumnName = "id")
+	@JsonProperty(access = Access.WRITE_ONLY)
 	private Set<RoleModulePermissionsEntity> modulePermissions;
 
 	@ManyToMany(mappedBy = "roleEntities", cascade = CascadeType.ALL, fetch = FetchType.EAGER)

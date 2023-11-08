@@ -19,10 +19,10 @@ public abstract class BaseEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Column(name = "created_by")
-	private Integer createdBy;
+	private Long createdBy;
 
 	@Column(name = "updated_by")
-	private Integer updatedBy;
+	private Long updatedBy;
 
 	@CreationTimestamp
 	@Column(name = "created_at", updatable = false)
@@ -33,7 +33,7 @@ public abstract class BaseEntity implements Serializable {
 	private LocalDateTime updatedAt;
 
 	@Column(name = "is_active")
-	private Boolean isActive;
+	private Boolean isActive = true;
 
 	@Column(name = "is_deleted")
 	private Boolean isDeleted = false;

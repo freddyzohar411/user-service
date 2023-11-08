@@ -2,6 +2,9 @@ package com.avensys.rts.userservice.entity;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,6 +44,7 @@ public class ModuleEntity extends BaseEntity {
 
 	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	@JoinColumn(name = "module_id", referencedColumnName = "id")
+	@JsonProperty(access = Access.WRITE_ONLY)
 	private Set<RoleModulePermissionsEntity> modulePermissions;
 
 }
