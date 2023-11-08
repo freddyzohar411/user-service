@@ -23,6 +23,14 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 		return new ResponseEntity<>(apiError, apiError.getStatus());
 	}
 
+	@ExceptionHandler(value = JWTException.class)
+	public ResponseEntity<Object> jwtException(JWTException ex) {
+		ApiError apiError = new ApiError(HttpStatus.FORBIDDEN);
+		apiError.setMessage(ex.getLocalizedMessage());
+		ex.printStackTrace();
+		return buildResponseEntity(apiError);
+	}
+
 	@ExceptionHandler(value = RuntimeException.class)
 	public ResponseEntity<Object> exception(RuntimeException ex) {
 		ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR);

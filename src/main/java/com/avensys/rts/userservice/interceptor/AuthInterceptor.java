@@ -11,6 +11,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import com.avensys.rts.userservice.exception.JWTException;
 import com.avensys.rts.userservice.util.JwtUtil;
 
 import io.jsonwebtoken.Claims;
@@ -30,7 +31,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-			throws Exception {
+			throws JWTException {
 		log.info("Auth Pre-handling");
 
 		// Get the request URL
@@ -61,21 +62,26 @@ public class AuthInterceptor implements HandlerInterceptor {
 		String token = authorizationHeader.substring(7);
 
 		// Validate JWT with the public key from keycloak
-		jwtUtil.validateToken(token);
+		try {
+			jwtUtil.validateToken(token);
 
-		// Extract all claims from the signed token
-		Claims claims = jwtUtil.extractAllClaims(token);
+			// Extract all claims from the signed token
+			Claims claims = jwtUtil.extractAllClaims(token);
 
-		// Extract out the email and roles from the claims
-		String email = (String) claims.get("email");
-		List<String> roles = jwtUtil.extractRoles(claims);
+			// Extract out the email and roles from the claims
+			String email = (String) claims.get("email");
+			List<String> roles = jwtUtil.extractRoles(claims);
 
-		// Store in request context to be used in services
-		RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-		if (requestAttributes != null) {
-			requestAttributes.setAttribute("email", email, RequestAttributes.SCOPE_REQUEST);
-			requestAttributes.setAttribute("roles", roles, RequestAttributes.SCOPE_REQUEST);
-			requestAttributes.setAttribute("token", token, RequestAttributes.SCOPE_REQUEST);
+			// Store in request context to be used in services
+			RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+			if (requestAttributes != null) {
+				requestAttributes.setAttribute("email", email, RequestAttributes.SCOPE_REQUEST);
+				requestAttributes.setAttribute("roles", roles, RequestAttributes.SCOPE_REQUEST);
+				requestAttributes.setAttribute("token", token, RequestAttributes.SCOPE_REQUEST);
+			}
+
+		} catch (Exception e) {
+			throw new JWTException(e.getLocalizedMessage());
 		}
 		return true; // Continue the request processing chain
 	}
