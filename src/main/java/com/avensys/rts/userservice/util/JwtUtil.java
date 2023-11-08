@@ -7,11 +7,18 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.json.JsonParser;
+import org.springframework.boot.json.JsonParserFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
+
+import com.avensys.rts.userservice.entity.UserEntity;
+import com.avensys.rts.userservice.repository.UserRepository;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -22,6 +29,9 @@ public class JwtUtil {
 	// Get from application properties
 	@Value("${spring.keycloak.public-key}")
 	private String publicKey;
+
+	@Autowired
+	private UserRepository userRepository;
 
 	/**
 	 * Get public key instance from public key string
@@ -132,5 +142,29 @@ public class JwtUtil {
 			return (String) requestAttributes.getAttribute("token", RequestAttributes.SCOPE_REQUEST);
 		}
 		return null;
+	}
+
+	public Long getUserId(String token) {
+		Base64.Decoder decoder = Base64.getUrlDecoder();
+		String tokenValues[] = token.split("\\.");
+		String payload = null;
+		Long id = -1l;
+		if (tokenValues.length > 0) {
+			payload = new String(decoder.decode(tokenValues[1]));
+			try {
+				JsonParser parser = JsonParserFactory.getJsonParser();
+				Map<String, Object> map = parser.parseMap(payload);
+				if (!map.isEmpty()) {
+					String email = (String) map.get("email");
+					Optional<UserEntity> entity = userRepository.findByEmail(email);
+					if (entity.isPresent()) {
+						id = entity.get().getId();
+					}
+				}
+			} catch (Exception e) {
+
+			}
+		}
+		return id;
 	}
 }
