@@ -33,7 +33,7 @@ public abstract class BaseEntity implements Serializable {
 	private LocalDateTime updatedAt;
 
 	@Column(name = "is_active")
-	private Boolean isActive;
+	private Boolean isActive = true;
 
 	@Column(name = "is_deleted")
 	private Boolean isDeleted = false;
