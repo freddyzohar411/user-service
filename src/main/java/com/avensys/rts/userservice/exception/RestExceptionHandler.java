@@ -56,7 +56,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(BadCredentialsException.class)
 	protected ResponseEntity<Object> userNotFound(BadCredentialsException ex) {
 		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED);
-		apiError.setMessage(ex.getMessage());
+		apiError.setMessage("Invalid login attempt. Login Fail!");
 		return buildResponseEntity(apiError);
 	}
 
