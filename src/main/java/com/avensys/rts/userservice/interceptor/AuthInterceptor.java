@@ -39,7 +39,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
 		// Check if the request URL is in the list of URLs that are allowed without
 		// token
-		List<String> allowedUrls = Arrays.asList("/api/user/signin", "/api/user/signup", "/api/user/logout",
+		List<String> allowedUrls = Arrays.asList("/api/user","/api/user/signin", "/api/user/signup", "/api/user/logout",
 				"/api/user/validate");
 
 		if (allowedUrls.contains(requestUri)) {

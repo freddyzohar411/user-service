@@ -78,6 +78,7 @@ public class ResponseUtil {
 		if (user.getGroupEntities() != null && user.getGroupEntities().size() > 0) {
 			user.getGroupEntities().forEach(group -> {
 				UserGroupResponseDTO groupResponseDTO = new UserGroupResponseDTO();
+				groupResponseDTO.setId(group.getId()); //Added by HX
 				groupResponseDTO.setGroupName(group.getUserGroupName());
 				groupResponseDTO.setGroupDescription(group.getUserGroupDescription());
 
