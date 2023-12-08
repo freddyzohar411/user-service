@@ -1,9 +1,6 @@
 package com.avensys.rts.userservice.util;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -161,6 +158,16 @@ public class ResponseUtil {
 		userListingResponseDTO.setTotalPages(userEntityPage.getTotalPages());
 		userListingResponseDTO.setUsers(mapUserEntityListtoResponse(userEntityPage.getContent()));
 		return userListingResponseDTO;
+	}
+
+	public static Set<Long> userEntitiesToIds(Set<UserEntity> userEntities) {
+		Set<Long> ids = new HashSet<Long>();
+		if (userEntities != null && userEntities.size() > 0) {
+			userEntities.forEach(user -> {
+				ids.add(user.getId());
+			});
+		}
+		return ids;
 	}
 
 }

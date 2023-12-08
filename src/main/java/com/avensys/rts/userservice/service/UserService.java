@@ -438,4 +438,26 @@ public class UserService implements UserDetailsService {
 		};
 	}
 
+	public Set<UserEntity> getAllUsersUnderManager(Long managerId) {
+		Set<UserEntity> allUsersUnderManager = new HashSet<>();
+		UserEntity manager = userRepository.findById(managerId).orElse(null);
+		if (manager != null) {
+			recursivelyGetUsersUnderManager(manager, allUsersUnderManager);
+		}
+		return allUsersUnderManager;
+	}
+
+	private void recursivelyGetUsersUnderManager(UserEntity manager, Set<UserEntity> result) {
+		if (manager != null) {
+			result.add(manager);
+
+			// Recursively get users under each subordinate manager
+			if (manager.getUsers() != null) {
+				for (UserEntity subordinate : manager.getUsers()) {
+					recursivelyGetUsersUnderManager(subordinate, result);
+				}
+			}
+		}
+	}
+
 }

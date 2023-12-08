@@ -1,6 +1,7 @@
 package com.avensys.rts.userservice.controller;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
@@ -198,6 +199,13 @@ public class UserController {
 						userService.getUserListingPageWithSearch(page, pageSize, sortBy, sortDirection, searchTerm)),
 				HttpStatus.OK,
 				messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
+	}
+
+	@GetMapping("/users-under-manager/{managerId}")
+	public ResponseEntity<Object> getUsersUnderManager(@PathVariable Long managerId) {
+		Set<UserEntity> users = userService.getAllUsersUnderManager(managerId);
+		return ResponseUtil.generateSuccessResponse(ResponseUtil.userEntitiesToIds(users), HttpStatus.OK,
+				null);
 	}
 
 }
