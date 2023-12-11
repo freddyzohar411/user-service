@@ -164,7 +164,7 @@ public class UserService implements UserDetailsService {
 //		}
 //	}
 
-	public void saveUser(UserCreateRequestDTO userRequest, Long createdByUserId) throws ServiceException {
+	public void saveUser(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 
 		// add check for username exists in a DB
 		if (userRepository.existsByUsername(userRequest.getUsername())) {
@@ -244,49 +244,126 @@ public class UserService implements UserDetailsService {
 		}
 	}
 
-	public void update(UserEntity user) throws ServiceException {
+//	public void update(UserEntity user) throws ServiceException {
+//
+//		Optional<UserEntity> dbUser = userRepository.findByUsername(user.getUsername());
+//
+//		// add check for username exists in a DB
+//		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
+//					LocaleContextHolder.getLocale()));
+//		}
+//
+//		dbUser = userRepository.findByEmail(user.getEmail());
+//
+//		// add check for email exists in DB
+//		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
+//					LocaleContextHolder.getLocale()));
+//		}
+//
+//		dbUser = userRepository.findByEmployeeId(user.getEmployeeId());
+//
+//		// add check for email exists in DB
+//		if (dbUser.isPresent() && dbUser.get().getId() != user.getId() && user.getEmployeeId() != null) {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
+//					LocaleContextHolder.getLocale()));
+//		}
+//
+//		UserEntity userById = getUserById(user.getId());
+//
+//		if (userById.getKeycloackId() != null) {
+//			String password = userById.getPassword();
+//
+//			if (user.getPassword() != null && user.getPassword().length() > 0) {
+//				String encodedPassword = passwordEncoder.encode(user.getPassword());
+//				password = encodedPassword;
+//				userById.setPassword(password);
+//			}
+//
+//			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
+//			UserRepresentation kcUser = new UserRepresentation();
+//			kcUser.setUsername(user.getUsername());
+//			kcUser.setFirstName(user.getFirstName());
+//			kcUser.setLastName(user.getLastName());
+//			kcUser.setEmail(user.getEmail());
+//			kcUser.setEmailVerified(true);
+//			kcUser.setEnabled(true);
+//			kcUser.setCredentials(Collections.singletonList(credential));
+//
+//			UsersResource usersResource = keyCloackUtil.getRealm().users();
+//			usersResource.get(userById.getKeycloackId()).update(kcUser);
+//			usersResource.get(userById.getKeycloackId()).resetPassword(credential);
+//			user.setKeycloackId(userById.getKeycloackId());
+//
+//			userById.setFirstName(user.getFirstName());
+//			userById.setLastName(user.getLastName());
+//			userById.setUsername(user.getUsername());
+//			userById.setEmail(user.getEmail());
+//			userById.setMobile(user.getMobile());
+//			userById.setUpdatedBy(user.getUpdatedBy());
+//
+//			if (user.getEmployeeId() != null) {
+//				userById.setEmployeeId(user.getEmployeeId());
+//			}
+//
+//			userRepository.save(userById);
+//		} else {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
+//					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
+//		}
+//	}
 
-		Optional<UserEntity> dbUser = userRepository.findByUsername(user.getUsername());
+	public void update(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
+
+		Optional<UserEntity> dbUser = userRepository.findByUsername(userRequest.getUsername());
 
 		// add check for username exists in a DB
-		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
+		if (dbUser.isPresent() && dbUser.get().getId() != userRequest.getId()) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
-		dbUser = userRepository.findByEmail(user.getEmail());
+		dbUser = userRepository.findByEmail(userRequest.getEmail());
 
 		// add check for email exists in DB
-		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
+		if (dbUser.isPresent() && dbUser.get().getId() != userRequest.getId()) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
-		dbUser = userRepository.findByEmployeeId(user.getEmployeeId());
+		dbUser = userRepository.findByEmployeeId(userRequest.getEmployeeId());
 
 		// add check for email exists in DB
-		if (dbUser.isPresent() && dbUser.get().getId() != user.getId() && user.getEmployeeId() != null) {
+		if (dbUser.isPresent() && dbUser.get().getId() != userRequest.getId() && userRequest.getEmployeeId() != null) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
-		UserEntity userById = getUserById(user.getId());
+		UserEntity userById = getUserById(userRequest.getId());
+
+		// Added by Hx 11122023 - Update Manager
+		if (userRequest.getManagerId() != null) {
+			UserEntity manager = userRepository.findById(userRequest.getManagerId()).orElseThrow(() -> new ServiceException(
+					messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { userRequest.getId() },
+							LocaleContextHolder.getLocale())));
+			userById.setManager(manager);
+		}
 
 		if (userById.getKeycloackId() != null) {
-			String password = userById.getPassword();
+			String password = userRequest.getPassword();
 
-			if (user.getPassword() != null && user.getPassword().length() > 0) {
-				String encodedPassword = passwordEncoder.encode(user.getPassword());
-				password = encodedPassword;
-				userById.setPassword(password);
+			if (userRequest.getPassword() != null && userRequest.getPassword().length() > 0) {
+				String encodedPassword = passwordEncoder.encode(userRequest.getPassword());
+				userById.setPassword(encodedPassword);
 			}
 
 			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
 			UserRepresentation kcUser = new UserRepresentation();
-			kcUser.setUsername(user.getUsername());
-			kcUser.setFirstName(user.getFirstName());
-			kcUser.setLastName(user.getLastName());
-			kcUser.setEmail(user.getEmail());
+			kcUser.setUsername(userRequest.getUsername());
+			kcUser.setFirstName(userRequest.getFirstName());
+			kcUser.setLastName(userRequest.getLastName());
+			kcUser.setEmail(userRequest.getEmail());
 			kcUser.setEmailVerified(true);
 			kcUser.setEnabled(true);
 			kcUser.setCredentials(Collections.singletonList(credential));
@@ -294,23 +371,22 @@ public class UserService implements UserDetailsService {
 			UsersResource usersResource = keyCloackUtil.getRealm().users();
 			usersResource.get(userById.getKeycloackId()).update(kcUser);
 			usersResource.get(userById.getKeycloackId()).resetPassword(credential);
-			user.setKeycloackId(userById.getKeycloackId());
 
-			userById.setFirstName(user.getFirstName());
-			userById.setLastName(user.getLastName());
-			userById.setUsername(user.getUsername());
-			userById.setEmail(user.getEmail());
-			userById.setMobile(user.getMobile());
-			userById.setUpdatedBy(user.getUpdatedBy());
+			userById.setFirstName(userRequest.getFirstName());
+			userById.setLastName(userRequest.getLastName());
+			userById.setUsername(userRequest.getUsername());
+			userById.setEmail(userRequest.getEmail());
+			userById.setMobile(userRequest.getMobile());
+			userById.setUpdatedBy(createdByUserId);
 
-			if (user.getEmployeeId() != null) {
-				userById.setEmployeeId(user.getEmployeeId());
+			if (userRequest.getEmployeeId() != null) {
+				userById.setEmployeeId(userRequest.getEmployeeId());
 			}
 
 			userRepository.save(userById);
 		} else {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
-					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
+					new Object[] { userRequest.getId() }, LocaleContextHolder.getLocale()));
 		}
 	}
 

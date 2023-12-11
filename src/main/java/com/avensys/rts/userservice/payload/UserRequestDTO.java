@@ -11,7 +11,10 @@ import jakarta.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserCreateRequestDTO {
+public class UserRequestDTO {
+
+	private Long id;
+
 	@NotNull(message = "First Name cannot be empty")
 	private String firstName;
 

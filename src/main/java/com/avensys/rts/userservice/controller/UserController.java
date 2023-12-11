@@ -82,7 +82,7 @@ public class UserController {
 //	}
 
 	@PostMapping("/signup")
-	public ResponseEntity<?> registerUser(@RequestBody UserCreateRequestDTO user) {
+	public ResponseEntity<?> registerUser(@RequestBody UserRequestDTO user) {
 		try {
 			// create user object
 			userService.saveUser(user, null);
@@ -124,7 +124,7 @@ public class UserController {
 //	}
 
 	@PostMapping
-	public ResponseEntity<?> createUser(@RequestBody UserCreateRequestDTO user,
+	public ResponseEntity<?> createUser(@RequestBody UserRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
 			Long userId = jwtUtil.getUserId(token);
@@ -140,12 +140,12 @@ public class UserController {
 	}
 
 	@PutMapping
-	public ResponseEntity<?> editUser(@RequestBody UserEntity user,
+	public ResponseEntity<?> editUser(@RequestBody UserRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
 			Long userId = jwtUtil.getUserId(token);
-			user.setUpdatedBy(userId);
-			userService.update(user);
+//			user.setUpdatedBy(userId);
+			userService.update(user, userId);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
 					messageSource.getMessage(MessageConstants.USER_UPDATED, null, LocaleContextHolder.getLocale()));
 		} catch (ServiceException e) {
