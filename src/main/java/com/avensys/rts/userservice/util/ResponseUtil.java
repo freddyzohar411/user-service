@@ -70,6 +70,11 @@ public class ResponseUtil {
 		dto.setLocked(user.getLocked());
 		dto.setEnabled(user.getEnabled());
 
+		// Added by He Xiang 11122023
+		if (user.getManager() != null) {
+			dto.setManagerId(user.getManager().getId());
+		}
+
 		List<UserGroupResponseDTO> userGroups = new ArrayList<UserGroupResponseDTO>();
 
 		if (user.getGroupEntities() != null && user.getGroupEntities().size() > 0) {

@@ -22,4 +22,6 @@ public class UserResponseDTO {
 	private Boolean enabled;
 	private List<UserGroupResponseDTO> userGroup;
 
+	// Added by He Xiang 11122023
+	private Long managerId;
 }
