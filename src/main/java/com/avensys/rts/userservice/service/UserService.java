@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.avensys.rts.userservice.payload.*;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -41,10 +42,6 @@ import org.springframework.web.client.RestTemplate;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
-import com.avensys.rts.userservice.payload.LoginDTO;
-import com.avensys.rts.userservice.payload.LoginResponseDTO;
-import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
@@ -104,33 +101,121 @@ public class UserService implements UserDetailsService {
 		return new User(user.getEmail(), user.getPassword(), authorities);
 	}
 
-	public void saveUser(UserEntity user) throws ServiceException {
+//	public void saveUser(UserEntity user) throws ServiceException {
+//
+//		// add check for username exists in a DB
+//		if (userRepository.existsByUsername(user.getUsername())) {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
+//					LocaleContextHolder.getLocale()));
+//		}
+//
+//		// add check for email exists in DB
+//		if (userRepository.existsByEmail(user.getEmail())) {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
+//					LocaleContextHolder.getLocale()));
+//		}
+//
+//		// add check for email exists in DB
+//		if (user.getEmployeeId() != null && userRepository.existsByEmployeeId(user.getEmployeeId())) {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
+//					LocaleContextHolder.getLocale()));
+//		}
+//
+//		String password = user.getPassword();
+//		String encodedPassword = passwordEncoder.encode(password);
+//		user.setPassword(encodedPassword);
+//
+//		// set fields, as this is new user, active = true and deleted = false
+//		user.setIsActive(Boolean.TRUE);
+//		user.setIsDeleted(Boolean.FALSE);
+//
+//		// Added by Hx 11122023 - Add Manager
+//		if (user.getManager() != null) {
+//			UserEntity manager = userRepository.findById(user.getManager().getId()).orElseThrow(() -> new ServiceException(
+//					messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { user.getId() },
+//							LocaleContextHolder.getLocale())));
+//			user.setManager(manager);
+//		}
+//
+//		RealmResource realmResource = keyCloackUtil.getRealm();
+//		UsersResource usersResource = realmResource.users();
+//
+//		UserRepresentation newUser = new UserRepresentation();
+//		newUser.setUsername(user.getUsername());
+//		newUser.setFirstName(user.getFirstName());
+//		newUser.setLastName(user.getLastName());
+//		newUser.setEmail(user.getEmail());
+//		newUser.setEmailVerified(true);
+//		newUser.setEnabled(true);
+//
+//		// Set the user's password
+//		CredentialRepresentation passwordCred = KeyCloackUtil.createPasswordCredentials(password);
+//
+//		newUser.setCredentials(Collections.singletonList(passwordCred));
+//		Response response = usersResource.create(newUser);
+//		String kcId = CreatedResponseUtil.getCreatedId(response);
+//		if (kcId != null) {
+//			// Save to the database
+//			user.setKeycloackId(kcId);
+//			userRepository.save(user);
+//		} else {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
+//					LocaleContextHolder.getLocale()));
+//		}
+//	}
+
+	public void saveUser(UserCreateRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 
 		// add check for username exists in a DB
-		if (userRepository.existsByUsername(user.getUsername())) {
+		if (userRepository.existsByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
 		// add check for email exists in DB
-		if (userRepository.existsByEmail(user.getEmail())) {
+		if (userRepository.existsByEmail(userRequest.getEmail())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
 		// add check for email exists in DB
-		if (user.getEmployeeId() != null && userRepository.existsByEmployeeId(user.getEmployeeId())) {
+		if (userRequest.getEmployeeId() != null && userRepository.existsByEmployeeId(userRequest.getEmployeeId())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
-		String password = user.getPassword();
+		// Create a new user entity
+		UserEntity user = new UserEntity();
+
+		String password = userRequest.getPassword();
 		String encodedPassword = passwordEncoder.encode(password);
 		user.setPassword(encodedPassword);
 
 		// set fields, as this is new user, active = true and deleted = false
 		user.setIsActive(Boolean.TRUE);
 		user.setIsDeleted(Boolean.FALSE);
+
+		// Set created by and updated by
+		if (createdByUserId != null) {
+			user.setCreatedBy(createdByUserId);
+			user.setUpdatedBy(createdByUserId);
+		}
+
+		// Set user fields
+		user.setFirstName(userRequest.getFirstName());
+		user.setLastName(userRequest.getLastName());
+		user.setMobile(userRequest.getMobile());
+		user.setUsername(userRequest.getUsername());
+		user.setEmployeeId(userRequest.getEmployeeId());
+		user.setEmail(userRequest.getEmail());
+
+		// Added by Hx 11122023 - Add Manager
+		if (userRequest.getManagerId() != null) {
+			UserEntity manager = userRepository.findById(userRequest.getManagerId()).orElseThrow(() -> new ServiceException(
+					messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { user.getId() },
+							LocaleContextHolder.getLocale())));
+			user.setManager(manager);
+		}
 
 		RealmResource realmResource = keyCloackUtil.getRealm();
 		UsersResource usersResource = realmResource.users();

@@ -3,6 +3,7 @@ package com.avensys.rts.userservice.controller;
 import java.util.List;
 import java.util.Set;
 
+import com.avensys.rts.userservice.payload.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -26,11 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
-import com.avensys.rts.userservice.payload.LoginDTO;
-import com.avensys.rts.userservice.payload.LoginResponseDTO;
-import com.avensys.rts.userservice.payload.LogoutResponseDTO;
-import com.avensys.rts.userservice.payload.UserListingRequestDTO;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.ResponseUtil;
@@ -71,11 +67,25 @@ public class UserController {
 		}
 	}
 
+//	@PostMapping("/signup")
+//	public ResponseEntity<?> registerUser(@RequestBody UserEntity user) {
+//		try {
+//			// create user object
+//			userService.saveUser(user);
+//
+//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
+//					messageSource.getMessage(MessageConstants.USER_REGISTERED, null, LocaleContextHolder.getLocale()));
+//		} catch (ServiceException e) {
+//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, messageSource
+//					.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null, LocaleContextHolder.getLocale()));
+//		}
+//	}
+
 	@PostMapping("/signup")
-	public ResponseEntity<?> registerUser(@RequestBody UserEntity user) {
+	public ResponseEntity<?> registerUser(@RequestBody UserCreateRequestDTO user) {
 		try {
 			// create user object
-			userService.saveUser(user);
+			userService.saveUser(user, null);
 
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
 					messageSource.getMessage(MessageConstants.USER_REGISTERED, null, LocaleContextHolder.getLocale()));
@@ -97,14 +107,30 @@ public class UserController {
 		return ResponseEntity.ok(instrospectResponseDTO);
 	}
 
+//	@PostMapping
+//	public ResponseEntity<?> createUser(@RequestBody UserEntity user,
+//			@RequestHeader(name = "Authorization") String token) {
+//		try {
+//			Long userId = jwtUtil.getUserId(token);
+//			user.setCreatedBy(userId);
+//			user.setUpdatedBy(userId);
+//			userService.saveUser(user);
+//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
+//					messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));
+//
+//		} catch (ServiceException e) {
+//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, e.getMessage());
+//		}
+//	}
+
 	@PostMapping
-	public ResponseEntity<?> createUser(@RequestBody UserEntity user,
+	public ResponseEntity<?> createUser(@RequestBody UserCreateRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
 			Long userId = jwtUtil.getUserId(token);
-			user.setCreatedBy(userId);
-			user.setUpdatedBy(userId);
-			userService.saveUser(user);
+//			user.setCreatedBy(userId);
+//			user.setUpdatedBy(userId);
+			userService.saveUser(user, userId);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
 					messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));
 
