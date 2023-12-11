@@ -438,9 +438,13 @@ public class UserService implements UserDetailsService {
 		};
 	}
 
-	public Set<UserEntity> getAllUsersUnderManager(Long managerId) {
+	public Set<UserEntity> getAllUsersUnderManager() throws ServiceException {
 		Set<UserEntity> allUsersUnderManager = new HashSet<>();
-		UserEntity manager = userRepository.findById(managerId).orElse(null);
+		String email = JwtUtil.getEmailFromContext();
+		UserEntity manager = userRepository.findByUsernameOrEmail(email, email)
+				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
+						null, LocaleContextHolder.getLocale())));
+//		UserEntity manager = userRepository.findById(managerId).orElse(null);
 		if (manager != null) {
 			recursivelyGetUsersUnderManager(manager, allUsersUnderManager);
 		}

@@ -170,7 +170,6 @@ public class UserController {
 
 	@GetMapping("/profile")
 	public ResponseEntity<Object> getUserDetail() {
-
 		try {
 			UserEntity user = userService.getUserDetail();
 			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(user), HttpStatus.OK,
@@ -201,9 +200,14 @@ public class UserController {
 				messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
 	}
 
-	@GetMapping("/users-under-manager/{managerId}")
-	public ResponseEntity<Object> getUsersUnderManager(@PathVariable Long managerId) {
-		Set<UserEntity> users = userService.getAllUsersUnderManager(managerId);
+	@GetMapping("/users-under-manager")
+	public ResponseEntity<Object> getUsersUnderManager() {
+		Set<UserEntity> users = null;
+		try {
+			users = userService.getAllUsersUnderManager();
+		} catch (ServiceException e) {
+			throw new RuntimeException(e);
+		}
 		return ResponseUtil.generateSuccessResponse(ResponseUtil.userEntitiesToIds(users), HttpStatus.OK,
 				null);
 	}
