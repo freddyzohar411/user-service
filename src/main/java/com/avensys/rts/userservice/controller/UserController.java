@@ -227,14 +227,8 @@ public class UserController {
 	}
 
 	@GetMapping("/users-under-manager")
-	public ResponseEntity<Object> getUsersUnderManager() {
-		Set<UserEntity> users = null;
-		try {
-			users = userService.getAllUsersUnderManager();
-		} catch (ServiceException e) {
-			throw new RuntimeException(e);
-		}
-		return ResponseUtil.generateSuccessResponse(ResponseUtil.userEntitiesToIds(users), HttpStatus.OK,
+	public ResponseEntity<Object> getUsersUnderManager() throws ServiceException {
+		return ResponseUtil.generateSuccessResponse(userService.getAllUsersUnderManagerQuery(), HttpStatus.OK,
 				null);
 	}
 

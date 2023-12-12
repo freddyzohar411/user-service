@@ -2,6 +2,7 @@ package com.avensys.rts.userservice.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.avensys.rts.userservice.entity.UserEntity;
@@ -38,4 +40,10 @@ public interface UserRepository extends CrudRepository<UserEntity, Long>, JpaSpe
 
 	Page<UserEntity> findAll(Specification<UserEntity> specification, Pageable pageable);
 
+	@Query(value = "WITH RECURSIVE UserHierarchy AS ( " +
+			"SELECT id, manager FROM users WHERE id = :userId " +
+			"UNION " +
+			"SELECT u.id, u.manager FROM users u JOIN UserHierarchy h ON u.manager = h.id) " +
+			"SELECT id FROM UserHierarchy WHERE id IS NOT NULL", nativeQuery = true)
+	Set<Long> findUserIdsUnderManager(@Param("userId") Long userId);
 }

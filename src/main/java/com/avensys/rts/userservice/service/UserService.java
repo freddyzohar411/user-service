@@ -164,6 +164,12 @@ public class UserService implements UserDetailsService {
 //		}
 //	}
 
+	/**
+	 * Save user (Modified by HX)
+	 * @param userRequest
+	 * @param createdByUserId
+	 * @throws ServiceException
+	 */
 	public void saveUser(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 
 		// add check for username exists in a DB
@@ -600,6 +606,11 @@ public class UserService implements UserDetailsService {
 		};
 	}
 
+	/**
+	 * Get all users under a manager (In Java)
+	 * @return
+	 * @throws ServiceException
+	 */
 	public Set<UserEntity> getAllUsersUnderManager() throws ServiceException {
 		Set<UserEntity> allUsersUnderManager = new HashSet<>();
 		String email = JwtUtil.getEmailFromContext();
@@ -624,6 +635,19 @@ public class UserService implements UserDetailsService {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get all users under a manager (In SQL)
+	 * @return
+	 * @throws ServiceException
+	 */
+	public Set<Long> getAllUsersUnderManagerQuery() throws ServiceException {
+		String email = JwtUtil.getEmailFromContext();
+		UserEntity manager = userRepository.findByUsernameOrEmail(email, email)
+				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
+						null, LocaleContextHolder.getLocale())));
+		return userRepository.findUserIdsUnderManager(manager.getId());
 	}
 
 }
