@@ -314,6 +314,7 @@ public class UserService implements UserDetailsService {
 //		}
 //	}
 
+	// Updated by Hx 11122023 - Update Manager and fix password update in db and keycloak
 	public void update(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 
 		Optional<UserEntity> dbUser = userRepository.findByUsername(userRequest.getUsername());
