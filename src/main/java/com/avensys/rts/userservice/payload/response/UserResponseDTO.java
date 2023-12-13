@@ -1,5 +1,6 @@
 package com.avensys.rts.userservice.payload.response;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -25,4 +26,5 @@ public class UserResponseDTO {
 
 	// Added by He Xiang 11122023
 	private Long managerId;
+	private LocalDateTime createdAt;
 }

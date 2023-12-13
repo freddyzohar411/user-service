@@ -69,6 +69,7 @@ public class ResponseUtil {
 		dto.setEmployeeId(user.getEmployeeId());
 		dto.setLocked(user.getLocked());
 		dto.setEnabled(user.getEnabled());
+		dto.setCreatedAt(user.getCreatedAt());
 
 		// Added by He Xiang 11122023
 		if (user.getManager() != null) {
