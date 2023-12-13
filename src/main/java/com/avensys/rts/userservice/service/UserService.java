@@ -355,6 +355,8 @@ public class UserService implements UserDetailsService {
 					messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { userRequest.getId() },
 							LocaleContextHolder.getLocale())));
 			userById.setManager(manager);
+		} else {
+			userById.setManager(null);
 		}
 
 		if (userById.getKeycloackId() != null) {
