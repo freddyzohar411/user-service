@@ -27,4 +27,5 @@ public class UserResponseDTO {
 	// Added by He Xiang 11122023
 	private Long managerId;
 	private LocalDateTime createdAt;
+	private UserResponseDTO Manager;
 }

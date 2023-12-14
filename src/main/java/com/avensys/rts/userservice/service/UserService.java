@@ -564,7 +564,6 @@ public class UserService implements UserDetailsService {
 
 		// Dynamic search based on custom view (future feature)
 		List<String> customView = List.of("lastName", "firstName", "employeeId", "createdAt");
-//		List<String> customView = List.of("firstName", "lastName");
 
 		Page<UserEntity> usersPage = userRepository.findAll(getSpecification(searchTerm, customView, false, true),
 				pageable);

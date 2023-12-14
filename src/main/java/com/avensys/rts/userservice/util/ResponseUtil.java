@@ -74,6 +74,7 @@ public class ResponseUtil {
 		// Added by He Xiang 11122023
 		if (user.getManager() != null) {
 			dto.setManagerId(user.getManager().getId());
+			dto.setManager(mapUserEntitytoResponse(user.getManager()));
 		}
 
 		List<UserGroupResponseDTO> userGroups = new ArrayList<UserGroupResponseDTO>();
