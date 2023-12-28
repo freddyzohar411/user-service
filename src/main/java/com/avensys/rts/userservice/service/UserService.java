@@ -96,73 +96,8 @@ public class UserService implements UserDetailsService {
 		Set<GrantedAuthority> authorities = new HashSet<>();
 		authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
-//		Set<GrantedAuthority> authorities = list.map((role) -> new SimpleGrantedAuthority(role.getName()))
-//				.collect(Collectors.toSet());
 		return new User(user.getEmail(), user.getPassword(), authorities);
 	}
-
-//	public void saveUser(UserEntity user) throws ServiceException {
-//
-//		// add check for username exists in a DB
-//		if (userRepository.existsByUsername(user.getUsername())) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//
-//		// add check for email exists in DB
-//		if (userRepository.existsByEmail(user.getEmail())) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//
-//		// add check for email exists in DB
-//		if (user.getEmployeeId() != null && userRepository.existsByEmployeeId(user.getEmployeeId())) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//
-//		String password = user.getPassword();
-//		String encodedPassword = passwordEncoder.encode(password);
-//		user.setPassword(encodedPassword);
-//
-//		// set fields, as this is new user, active = true and deleted = false
-//		user.setIsActive(Boolean.TRUE);
-//		user.setIsDeleted(Boolean.FALSE);
-//
-//		// Added by Hx 11122023 - Add Manager
-//		if (user.getManager() != null) {
-//			UserEntity manager = userRepository.findById(user.getManager().getId()).orElseThrow(() -> new ServiceException(
-//					messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { user.getId() },
-//							LocaleContextHolder.getLocale())));
-//			user.setManager(manager);
-//		}
-//
-//		RealmResource realmResource = keyCloackUtil.getRealm();
-//		UsersResource usersResource = realmResource.users();
-//
-//		UserRepresentation newUser = new UserRepresentation();
-//		newUser.setUsername(user.getUsername());
-//		newUser.setFirstName(user.getFirstName());
-//		newUser.setLastName(user.getLastName());
-//		newUser.setEmail(user.getEmail());
-//		newUser.setEmailVerified(true);
-//		newUser.setEnabled(true);
-//
-//		// Set the user's password
-//		CredentialRepresentation passwordCred = KeyCloackUtil.createPasswordCredentials(password);
-//
-//		newUser.setCredentials(Collections.singletonList(passwordCred));
-//		Response response = usersResource.create(newUser);
-//		String kcId = CreatedResponseUtil.getCreatedId(response);
-//		if (kcId != null) {
-//			// Save to the database
-//			user.setKeycloackId(kcId);
-//			userRepository.save(user);
-//		} else {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//	}
 
 	/**
 	 * Save user (Modified by HX)
@@ -249,76 +184,6 @@ public class UserService implements UserDetailsService {
 					LocaleContextHolder.getLocale()));
 		}
 	}
-
-//	public void update(UserEntity user) throws ServiceException {
-//
-//		Optional<UserEntity> dbUser = userRepository.findByUsername(user.getUsername());
-//
-//		// add check for username exists in a DB
-//		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//
-//		dbUser = userRepository.findByEmail(user.getEmail());
-//
-//		// add check for email exists in DB
-//		if (dbUser.isPresent() && dbUser.get().getId() != user.getId()) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//
-//		dbUser = userRepository.findByEmployeeId(user.getEmployeeId());
-//
-//		// add check for email exists in DB
-//		if (dbUser.isPresent() && dbUser.get().getId() != user.getId() && user.getEmployeeId() != null) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//
-//		UserEntity userById = getUserById(user.getId());
-//
-//		if (userById.getKeycloackId() != null) {
-//			String password = userById.getPassword();
-//
-//			if (user.getPassword() != null && user.getPassword().length() > 0) {
-//				String encodedPassword = passwordEncoder.encode(user.getPassword());
-//				password = encodedPassword;
-//				userById.setPassword(password);
-//			}
-//
-//			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
-//			UserRepresentation kcUser = new UserRepresentation();
-//			kcUser.setUsername(user.getUsername());
-//			kcUser.setFirstName(user.getFirstName());
-//			kcUser.setLastName(user.getLastName());
-//			kcUser.setEmail(user.getEmail());
-//			kcUser.setEmailVerified(true);
-//			kcUser.setEnabled(true);
-//			kcUser.setCredentials(Collections.singletonList(credential));
-//
-//			UsersResource usersResource = keyCloackUtil.getRealm().users();
-//			usersResource.get(userById.getKeycloackId()).update(kcUser);
-//			usersResource.get(userById.getKeycloackId()).resetPassword(credential);
-//			user.setKeycloackId(userById.getKeycloackId());
-//
-//			userById.setFirstName(user.getFirstName());
-//			userById.setLastName(user.getLastName());
-//			userById.setUsername(user.getUsername());
-//			userById.setEmail(user.getEmail());
-//			userById.setMobile(user.getMobile());
-//			userById.setUpdatedBy(user.getUpdatedBy());
-//
-//			if (user.getEmployeeId() != null) {
-//				userById.setEmployeeId(user.getEmployeeId());
-//			}
-//
-//			userRepository.save(userById);
-//		} else {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
-//					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
-//		}
-//	}
 
 	// Updated by Hx 11122023 - Update Manager and fix password update in db and keycloak
 	public void update(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
@@ -618,7 +483,6 @@ public class UserService implements UserDetailsService {
 		UserEntity manager = userRepository.findByUsernameOrEmail(email, email)
 				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
 						null, LocaleContextHolder.getLocale())));
-//		UserEntity manager = userRepository.findById(managerId).orElse(null);
 		if (manager != null) {
 			recursivelyGetUsersUnderManager(manager, allUsersUnderManager);
 		}
@@ -628,7 +492,6 @@ public class UserService implements UserDetailsService {
 	private void recursivelyGetUsersUnderManager(UserEntity manager, Set<UserEntity> result) {
 		if (manager != null) {
 			result.add(manager);
-
 			// Recursively get users under each subordinate manager
 			if (manager.getUsers() != null) {
 				for (UserEntity subordinate : manager.getUsers()) {

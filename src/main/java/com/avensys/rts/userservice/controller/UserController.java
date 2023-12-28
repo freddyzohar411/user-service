@@ -67,20 +67,6 @@ public class UserController {
 		}
 	}
 
-//	@PostMapping("/signup")
-//	public ResponseEntity<?> registerUser(@RequestBody UserEntity user) {
-//		try {
-//			// create user object
-//			userService.saveUser(user);
-//
-//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
-//					messageSource.getMessage(MessageConstants.USER_REGISTERED, null, LocaleContextHolder.getLocale()));
-//		} catch (ServiceException e) {
-//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, messageSource
-//					.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null, LocaleContextHolder.getLocale()));
-//		}
-//	}
-
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@RequestBody UserRequestDTO user) {
 		try {
@@ -107,29 +93,11 @@ public class UserController {
 		return ResponseEntity.ok(instrospectResponseDTO);
 	}
 
-//	@PostMapping
-//	public ResponseEntity<?> createUser(@RequestBody UserEntity user,
-//			@RequestHeader(name = "Authorization") String token) {
-//		try {
-//			Long userId = jwtUtil.getUserId(token);
-//			user.setCreatedBy(userId);
-//			user.setUpdatedBy(userId);
-//			userService.saveUser(user);
-//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
-//					messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));
-//
-//		} catch (ServiceException e) {
-//			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, e.getMessage());
-//		}
-//	}
-
 	@PostMapping
 	public ResponseEntity<?> createUser(@RequestBody UserRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
 			Long userId = jwtUtil.getUserId(token);
-//			user.setCreatedBy(userId);
-//			user.setUpdatedBy(userId);
 			userService.saveUser(user, userId);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
 					messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));
@@ -144,7 +112,6 @@ public class UserController {
 			@RequestHeader(name = "Authorization") String token) {
 		try {
 			Long userId = jwtUtil.getUserId(token);
-//			user.setUpdatedBy(userId);
 			userService.update(user, userId);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
 					messageSource.getMessage(MessageConstants.USER_UPDATED, null, LocaleContextHolder.getLocale()));
