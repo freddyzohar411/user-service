@@ -31,7 +31,7 @@ public interface UserRepository extends CrudRepository<UserEntity, Long>, JpaSpe
 	Boolean existsByEmail(String email);
 
 	Boolean existsByEmployeeId(String employeeId);
-	
+
 	@Query(value = "SELECT group FROM UserEntity group WHERE group.isDeleted = ?1")
 	List<UserEntity> findAllAndIsDeleted(boolean isDeleted);
 
@@ -40,10 +40,8 @@ public interface UserRepository extends CrudRepository<UserEntity, Long>, JpaSpe
 
 	Page<UserEntity> findAll(Specification<UserEntity> specification, Pageable pageable);
 
-	@Query(value = "WITH RECURSIVE UserHierarchy AS ( " +
-			"SELECT id, manager FROM users WHERE id = :userId " +
-			"UNION " +
-			"SELECT u.id, u.manager FROM users u JOIN UserHierarchy h ON u.manager = h.id) " +
-			"SELECT id FROM UserHierarchy WHERE id IS NOT NULL", nativeQuery = true)
+	@Query(value = "WITH RECURSIVE UserHierarchy AS ( " + "SELECT id, manager FROM users WHERE id = :userId " + "UNION "
+			+ "SELECT u.id, u.manager FROM users u JOIN UserHierarchy h ON u.manager = h.id) "
+			+ "SELECT id FROM UserHierarchy WHERE id IS NOT NULL", nativeQuery = true)
 	Set<Long> findUserIdsUnderManager(@Param("userId") Long userId);
 }

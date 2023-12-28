@@ -101,6 +101,7 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Save user (Modified by HX)
+	 * 
 	 * @param userRequest
 	 * @param createdByUserId
 	 * @throws ServiceException
@@ -152,9 +153,9 @@ public class UserService implements UserDetailsService {
 
 		// Added by Hx 11122023 - Add Manager
 		if (userRequest.getManagerId() != null) {
-			UserEntity manager = userRepository.findById(userRequest.getManagerId()).orElseThrow(() -> new ServiceException(
-					messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { user.getId() },
-							LocaleContextHolder.getLocale())));
+			UserEntity manager = userRepository.findById(userRequest.getManagerId()).orElseThrow(
+					() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+							new Object[] { user.getId() }, LocaleContextHolder.getLocale())));
 			user.setManager(manager);
 		}
 
@@ -185,7 +186,8 @@ public class UserService implements UserDetailsService {
 		}
 	}
 
-	// Updated by Hx 11122023 - Update Manager and fix password update in db and keycloak
+	// Updated by Hx 11122023 - Update Manager and fix password update in db and
+	// keycloak
 	public void update(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 
 		Optional<UserEntity> dbUser = userRepository.findByUsername(userRequest.getUsername());
@@ -216,9 +218,9 @@ public class UserService implements UserDetailsService {
 
 		// Added by Hx 11122023 - Update Manager
 		if (userRequest.getManagerId() != null) {
-			UserEntity manager = userRepository.findById(userRequest.getManagerId()).orElseThrow(() -> new ServiceException(
-					messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, new Object[] { userRequest.getId() },
-							LocaleContextHolder.getLocale())));
+			UserEntity manager = userRepository.findById(userRequest.getManagerId()).orElseThrow(
+					() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+							new Object[] { userRequest.getId() }, LocaleContextHolder.getLocale())));
 			userById.setManager(manager);
 		} else {
 			userById.setManager(null);
@@ -406,8 +408,6 @@ public class UserService implements UserDetailsService {
 
 	public Page<UserEntity> getUserListingPageWithSearch(Integer page, Integer size, String sortBy,
 			String sortDirection, String searchTerm) {
-		System.out.println("In Search");
-		System.out.println("Search Term: " + searchTerm);
 		Sort sort = null;
 		if (sortBy != null) {
 			// Get direction based on sort direction
@@ -474,6 +474,7 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Get all users under a manager (In Java)
+	 * 
 	 * @return
 	 * @throws ServiceException
 	 */
@@ -503,6 +504,7 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Get all users under a manager (In SQL)
+	 * 
 	 * @return
 	 * @throws ServiceException
 	 */

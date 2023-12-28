@@ -195,8 +195,7 @@ public class UserController {
 
 	@GetMapping("/users-under-manager")
 	public ResponseEntity<Object> getUsersUnderManager() throws ServiceException {
-		return ResponseUtil.generateSuccessResponse(userService.getAllUsersUnderManagerQuery(), HttpStatus.OK,
-				null);
+		return ResponseUtil.generateSuccessResponse(userService.getAllUsersUnderManagerQuery(), HttpStatus.OK, null);
 	}
 
 }
