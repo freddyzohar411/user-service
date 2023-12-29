@@ -2,21 +2,15 @@ package com.avensys.rts.userservice.entity;
 
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.*;
+import org.apache.catalina.User;
 import org.hibernate.validator.constraints.Length;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -82,5 +76,15 @@ public class UserEntity extends BaseEntity {
 	@ManyToMany(mappedBy = "users", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JsonProperty(access = Access.WRITE_ONLY)
 	private Set<UserGroupEntity> groupEntities;
+
+	// Added by Hx 08122023
+	@OneToMany(mappedBy = "manager")
+	@JsonManagedReference
+	private Set<UserEntity> users;
+
+	@ManyToOne
+	@JoinColumn(name = "manager", referencedColumnName = "id")
+	@JsonBackReference
+	private UserEntity manager;
 
 }

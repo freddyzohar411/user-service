@@ -1,7 +1,9 @@
 package com.avensys.rts.userservice.payload.response;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 @Getter
@@ -22,4 +24,8 @@ public class UserResponseDTO {
 	private Boolean enabled;
 	private List<UserGroupResponseDTO> userGroup;
 
+	// Added by He Xiang 11122023
+	private Long managerId;
+	private LocalDateTime createdAt;
+	private UserResponseDTO Manager;
 }

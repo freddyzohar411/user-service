@@ -1,7 +1,9 @@
 package com.avensys.rts.userservice.controller;
 
 import java.util.List;
+import java.util.Set;
 
+import com.avensys.rts.userservice.payload.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -25,11 +27,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
-import com.avensys.rts.userservice.payload.LoginDTO;
-import com.avensys.rts.userservice.payload.LoginResponseDTO;
-import com.avensys.rts.userservice.payload.LogoutResponseDTO;
-import com.avensys.rts.userservice.payload.UserListingRequestDTO;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.ResponseUtil;
@@ -71,10 +68,10 @@ public class UserController {
 	}
 
 	@PostMapping("/signup")
-	public ResponseEntity<?> registerUser(@RequestBody UserEntity user) {
+	public ResponseEntity<?> registerUser(@RequestBody UserRequestDTO user) {
 		try {
 			// create user object
-			userService.saveUser(user);
+			userService.saveUser(user, null);
 
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
 					messageSource.getMessage(MessageConstants.USER_REGISTERED, null, LocaleContextHolder.getLocale()));
@@ -97,13 +94,11 @@ public class UserController {
 	}
 
 	@PostMapping
-	public ResponseEntity<?> createUser(@RequestBody UserEntity user,
+	public ResponseEntity<?> createUser(@RequestBody UserRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
 			Long userId = jwtUtil.getUserId(token);
-			user.setCreatedBy(userId);
-			user.setUpdatedBy(userId);
-			userService.saveUser(user);
+			userService.saveUser(user, userId);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
 					messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));
 
@@ -113,12 +108,11 @@ public class UserController {
 	}
 
 	@PutMapping
-	public ResponseEntity<?> editUser(@RequestBody UserEntity user,
+	public ResponseEntity<?> editUser(@RequestBody UserRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
 			Long userId = jwtUtil.getUserId(token);
-			user.setUpdatedBy(userId);
-			userService.update(user);
+			userService.update(user, userId);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
 					messageSource.getMessage(MessageConstants.USER_UPDATED, null, LocaleContextHolder.getLocale()));
 		} catch (ServiceException e) {
@@ -169,7 +163,6 @@ public class UserController {
 
 	@GetMapping("/profile")
 	public ResponseEntity<Object> getUserDetail() {
-
 		try {
 			UserEntity user = userService.getUserDetail();
 			return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntitytoResponse(user), HttpStatus.OK,
@@ -198,6 +191,11 @@ public class UserController {
 						userService.getUserListingPageWithSearch(page, pageSize, sortBy, sortDirection, searchTerm)),
 				HttpStatus.OK,
 				messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
+	}
+
+	@GetMapping("/users-under-manager")
+	public ResponseEntity<Object> getUsersUnderManager() throws ServiceException {
+		return ResponseUtil.generateSuccessResponse(userService.getAllUsersUnderManagerQuery(), HttpStatus.OK, null);
 	}
 
 }
