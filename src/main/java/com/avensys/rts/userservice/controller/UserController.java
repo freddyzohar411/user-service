@@ -93,7 +93,7 @@ public class UserController {
 		return ResponseEntity.ok(instrospectResponseDTO);
 	}
 
-	@PostMapping
+	@PostMapping("/add")
 	public ResponseEntity<?> createUser(@RequestBody UserRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
@@ -107,7 +107,7 @@ public class UserController {
 		}
 	}
 
-	@PutMapping
+	@PutMapping("/edit")
 	public ResponseEntity<?> editUser(@RequestBody UserRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
