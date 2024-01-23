@@ -1,9 +1,7 @@
 package com.avensys.rts.userservice.controller;
 
 import java.util.List;
-import java.util.Set;
 
-import com.avensys.rts.userservice.payload.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -27,6 +25,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
+import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
+import com.avensys.rts.userservice.payload.LoginDTO;
+import com.avensys.rts.userservice.payload.LoginResponseDTO;
+import com.avensys.rts.userservice.payload.LogoutResponseDTO;
+import com.avensys.rts.userservice.payload.RefreshTokenDTO;
+import com.avensys.rts.userservice.payload.UserListingRequestDTO;
+import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.ResponseUtil;
@@ -64,6 +69,18 @@ public class UserController {
 		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource
 					.getMessage(MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
+		}
+	}
+
+	@PostMapping("/refreshToken")
+	public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenDTO refreshTokenDTO) {
+		try {
+			userService.getUserById(refreshTokenDTO.getId());
+			LoginResponseDTO response = userService.refreshToken(refreshTokenDTO);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource
+					.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, null, LocaleContextHolder.getLocale()));
 		}
 	}
 

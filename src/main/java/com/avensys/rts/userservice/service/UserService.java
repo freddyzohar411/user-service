@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import com.avensys.rts.userservice.payload.*;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -42,6 +41,12 @@ import org.springframework.web.client.RestTemplate;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
+import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
+import com.avensys.rts.userservice.payload.LoginDTO;
+import com.avensys.rts.userservice.payload.LoginResponseDTO;
+import com.avensys.rts.userservice.payload.LogoutResponseDTO;
+import com.avensys.rts.userservice.payload.RefreshTokenDTO;
+import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
@@ -334,6 +339,30 @@ public class UserService implements UserDetailsService {
 				.orElseThrow(
 						() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_NOT_FOUND,
 								new Object[] { loginDTO.getUsername() }, LocaleContextHolder.getLocale())));
+		res.setUser(ResponseUtil.mapUserEntitytoResponse(userEntity));
+		return res;
+	}
+
+	public LoginResponseDTO refreshToken(RefreshTokenDTO refreshTokenDTO) throws ServiceException {
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		System.err.println(refreshTokenDTO.getRefreshToken());
+		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+		map.add("client_id", clientId);
+		map.add("client_secret", clientSecret);
+		map.add("grant_type", "refresh_token");
+		map.add("refresh_token", refreshTokenDTO.getRefreshToken());
+
+		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
+
+		ResponseEntity<LoginResponseDTO> response = restTemplate.postForEntity(tokenUrl, httpEntity,
+				LoginResponseDTO.class);
+
+		LoginResponseDTO res = response.getBody();
+		// Get userEnitity from repository
+		UserEntity userEntity = userRepository.findById(refreshTokenDTO.getId())
+				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+						new Object[] { refreshTokenDTO.getId() }, LocaleContextHolder.getLocale())));
 		res.setUser(ResponseUtil.mapUserEntitytoResponse(userEntity));
 		return res;
 	}
