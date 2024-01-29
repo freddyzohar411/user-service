@@ -346,7 +346,6 @@ public class UserService implements UserDetailsService {
 	public LoginResponseDTO refreshToken(RefreshTokenDTO refreshTokenDTO) throws ServiceException {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-		System.err.println(refreshTokenDTO.getRefreshToken());
 		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
 		map.add("client_id", clientId);
 		map.add("client_secret", clientSecret);

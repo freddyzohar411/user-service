@@ -11,10 +11,10 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import com.avensys.rts.userservice.exception.JWTException;
 import com.avensys.rts.userservice.util.JwtUtil;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -31,7 +31,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-			throws JWTException {
+			throws ExpiredJwtException {
 		log.info("Auth Pre-handling");
 
 		// Get the request URL
@@ -81,7 +81,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 			}
 
 		} catch (Exception e) {
-			throw new JWTException(e.getLocalizedMessage());
+			throw new ExpiredJwtException(null, null, e.getLocalizedMessage());
 		}
 		return true; // Continue the request processing chain
 	}
