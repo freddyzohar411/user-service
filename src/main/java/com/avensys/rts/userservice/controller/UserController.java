@@ -30,6 +30,7 @@ import com.avensys.rts.userservice.payload.LoginDTO;
 import com.avensys.rts.userservice.payload.LoginResponseDTO;
 import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.payload.RefreshTokenDTO;
+import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
 import com.avensys.rts.userservice.payload.UserListingRequestDTO;
 import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.service.UserService;
@@ -95,6 +96,19 @@ public class UserController {
 		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, messageSource
 					.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null, LocaleContextHolder.getLocale()));
+		}
+	}
+
+	@PostMapping("/loginResetPassword")
+	public ResponseEntity<?> firstTimeLoginResetPassword(@RequestBody ResetLoginRequestDTO resetLoginRequestDTO) {
+		try {
+			userService.loginResetPassword(resetLoginRequestDTO);
+
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
+					messageSource.getMessage(MessageConstants.USER_UPDATED, null, LocaleContextHolder.getLocale()));
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST,
+					messageSource.getMessage(MessageConstants.ERROR_OPERATION, null, LocaleContextHolder.getLocale()));
 		}
 	}
 

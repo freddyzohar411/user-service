@@ -87,4 +87,7 @@ public class UserEntity extends BaseEntity {
 	@JsonBackReference
 	private UserEntity manager;
 
+	@Column(name = "temp")
+	private Boolean isTemp = true;
+
 }

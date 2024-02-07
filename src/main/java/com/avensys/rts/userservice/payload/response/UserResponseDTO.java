@@ -3,8 +3,10 @@ package com.avensys.rts.userservice.payload.response;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -22,6 +24,7 @@ public class UserResponseDTO {
 	private String employeeId;
 	private Boolean locked;
 	private Boolean enabled;
+	private Boolean isTemp;
 	private List<UserGroupResponseDTO> userGroup;
 
 	// Added by He Xiang 11122023
