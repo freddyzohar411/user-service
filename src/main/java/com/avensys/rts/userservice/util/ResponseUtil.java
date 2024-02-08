@@ -1,6 +1,11 @@
 package com.avensys.rts.userservice.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -70,6 +75,7 @@ public class ResponseUtil {
 		dto.setLocked(user.getLocked());
 		dto.setEnabled(user.getEnabled());
 		dto.setCreatedAt(user.getCreatedAt());
+		dto.setIsTemp(user.getIsTemp() != null ? user.getIsTemp() : true);
 
 		// Added by He Xiang 11122023
 		if (user.getManager() != null) {
@@ -82,7 +88,7 @@ public class ResponseUtil {
 		if (user.getGroupEntities() != null && user.getGroupEntities().size() > 0) {
 			user.getGroupEntities().forEach(group -> {
 				UserGroupResponseDTO groupResponseDTO = new UserGroupResponseDTO();
-				groupResponseDTO.setId(group.getId()); //Added by HX
+				groupResponseDTO.setId(group.getId()); // Added by HX
 				groupResponseDTO.setGroupName(group.getUserGroupName());
 				groupResponseDTO.setGroupDescription(group.getUserGroupDescription());
 

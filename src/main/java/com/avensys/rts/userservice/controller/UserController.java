@@ -1,5 +1,6 @@
 package com.avensys.rts.userservice.controller;
 
+import java.util.Base64;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,10 +31,12 @@ import com.avensys.rts.userservice.payload.LoginDTO;
 import com.avensys.rts.userservice.payload.LoginResponseDTO;
 import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.payload.RefreshTokenDTO;
+import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
 import com.avensys.rts.userservice.payload.UserListingRequestDTO;
 import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.JwtUtil;
+import com.avensys.rts.userservice.util.PasswordUtil;
 import com.avensys.rts.userservice.util.ResponseUtil;
 
 @CrossOrigin
@@ -55,6 +58,10 @@ public class UserController {
 
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
+
+		String decodedPassword = PasswordUtil.decode(loginDTO.getPassword());
+		loginDTO.setPassword(decodedPassword);
+
 		Authentication authenticate = authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
 		try {
@@ -95,6 +102,24 @@ public class UserController {
 		} catch (ServiceException e) {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, messageSource
 					.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null, LocaleContextHolder.getLocale()));
+		}
+	}
+
+	/**
+	 * @author Rahul Sahu
+	 * @param resetLoginRequestDTO
+	 * @return
+	 * @description First time login user password reset
+	 */
+	@PostMapping("/loginResetPassword")
+	public ResponseEntity<?> firstTimeLoginResetPassword(@RequestBody ResetLoginRequestDTO resetLoginRequestDTO) {
+		try {
+			userService.loginResetPassword(resetLoginRequestDTO);
+
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
+					messageSource.getMessage(MessageConstants.USER_UPDATED, null, LocaleContextHolder.getLocale()));
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, e.getLocalizedMessage());
 		}
 	}
 

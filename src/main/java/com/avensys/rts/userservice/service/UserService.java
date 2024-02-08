@@ -1,6 +1,7 @@
 package com.avensys.rts.userservice.service;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -46,10 +47,12 @@ import com.avensys.rts.userservice.payload.LoginDTO;
 import com.avensys.rts.userservice.payload.LoginResponseDTO;
 import com.avensys.rts.userservice.payload.LogoutResponseDTO;
 import com.avensys.rts.userservice.payload.RefreshTokenDTO;
+import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
 import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
+import com.avensys.rts.userservice.util.PasswordUtil;
 import com.avensys.rts.userservice.util.ResponseUtil;
 
 import jakarta.persistence.criteria.Path;
@@ -155,6 +158,7 @@ public class UserService implements UserDetailsService {
 		user.setUsername(userRequest.getUsername());
 		user.setEmployeeId(userRequest.getEmployeeId());
 		user.setEmail(userRequest.getEmail());
+		user.setIsTemp(true);
 
 		// Added by Hx 11122023 - Add Manager
 		if (userRequest.getManagerId() != null) {
@@ -189,6 +193,58 @@ public class UserService implements UserDetailsService {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
 					LocaleContextHolder.getLocale()));
 		}
+	}
+
+	public void loginResetPassword(ResetLoginRequestDTO resetLoginRequestDTO) throws ServiceException {
+
+		resetLoginRequestDTO.setPassword(PasswordUtil.decode(resetLoginRequestDTO.getPassword()));
+		resetLoginRequestDTO.setConfirmPassword(PasswordUtil.decode(resetLoginRequestDTO.getConfirmPassword()));
+
+		// add check for username exists in a DB
+		Optional<UserEntity> userOptional = userRepository.findById(resetLoginRequestDTO.getUserId());
+		if (userOptional.isEmpty()) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+					new Object[] { resetLoginRequestDTO.getUserId() }, LocaleContextHolder.getLocale()));
+		}
+
+		UserEntity user = userOptional.get();
+
+		String password = resetLoginRequestDTO.getPassword();
+		String encodedPassword = passwordEncoder.encode(password);
+
+		if (passwordEncoder.matches(password, user.getPassword())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_OLD_PASSWORD, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		user.setPassword(encodedPassword);
+
+		// set fields, as this is new user, active = true and deleted = false
+		user.setIsActive(Boolean.TRUE);
+		user.setIsDeleted(Boolean.FALSE);
+		user.setIsTemp(false);
+		user.setUpdatedBy(resetLoginRequestDTO.getUserId());
+
+		if (user.getKeycloackId() != null) {
+			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
+			UserRepresentation kcUser = new UserRepresentation();
+			kcUser.setUsername(user.getUsername());
+			kcUser.setFirstName(user.getFirstName());
+			kcUser.setLastName(user.getLastName());
+			kcUser.setEmail(user.getEmail());
+			kcUser.setEmailVerified(true);
+			kcUser.setEnabled(true);
+			kcUser.setCredentials(Collections.singletonList(credential));
+
+			UsersResource usersResource = keyCloackUtil.getRealm().users();
+			usersResource.get(user.getKeycloackId()).update(kcUser);
+			usersResource.get(user.getKeycloackId()).resetPassword(credential);
+			userRepository.save(user);
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
+					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
+		}
+
 	}
 
 	// Updated by Hx 11122023 - Update Manager and fix password update in db and
