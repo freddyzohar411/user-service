@@ -99,6 +99,12 @@ public class UserController {
 		}
 	}
 
+	/**
+	 * @author Rahul Sahu
+	 * @param resetLoginRequestDTO
+	 * @return
+	 * @description First time login user password reset
+	 */
 	@PostMapping("/loginResetPassword")
 	public ResponseEntity<?> firstTimeLoginResetPassword(@RequestBody ResetLoginRequestDTO resetLoginRequestDTO) {
 		try {
@@ -107,8 +113,7 @@ public class UserController {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
 					messageSource.getMessage(MessageConstants.USER_UPDATED, null, LocaleContextHolder.getLocale()));
 		} catch (ServiceException e) {
-			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST,
-					messageSource.getMessage(MessageConstants.ERROR_OPERATION, null, LocaleContextHolder.getLocale()));
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, e.getLocalizedMessage());
 		}
 	}
 

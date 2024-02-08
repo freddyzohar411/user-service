@@ -207,10 +207,10 @@ public class UserService implements UserDetailsService {
 		String password = resetLoginRequestDTO.getPassword();
 		String encodedPassword = passwordEncoder.encode(password);
 
-//		if (user.getPassword().equals(encodedPassword)) {
-//			throw new ServiceException(messageSource.getMessage("New password should not match with old password.",
-//					null, LocaleContextHolder.getLocale()));
-//		}
+		if (passwordEncoder.matches(password, user.getPassword())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_OLD_PASSWORD, null,
+					LocaleContextHolder.getLocale()));
+		}
 
 		user.setPassword(encodedPassword);
 

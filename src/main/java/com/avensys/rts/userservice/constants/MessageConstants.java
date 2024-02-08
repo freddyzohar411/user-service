@@ -20,5 +20,5 @@ public class MessageConstants {
 	public static final String ERROR_EMPLOYEE_ID_TAKEN = "error.employeeidtaken";
 	public static final String ERROR_KEYCLOACK_USER_CREATION = "error.keycloack.user.creation";
 	public static final String ERROR_OPERATION = "error.operation";
-
+	public static final String ERROR_OLD_PASSWORD = "error.oldnewpassword";
 }
