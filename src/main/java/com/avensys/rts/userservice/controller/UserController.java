@@ -1,5 +1,6 @@
 package com.avensys.rts.userservice.controller;
 
+import java.util.Base64;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ import com.avensys.rts.userservice.payload.UserListingRequestDTO;
 import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.JwtUtil;
+import com.avensys.rts.userservice.util.PasswordUtil;
 import com.avensys.rts.userservice.util.ResponseUtil;
 
 @CrossOrigin
@@ -56,6 +58,10 @@ public class UserController {
 
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
+
+		String decodedPassword = PasswordUtil.decode(loginDTO.getPassword());
+		loginDTO.setPassword(decodedPassword);
+
 		Authentication authenticate = authenticationManager
 				.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
 		try {

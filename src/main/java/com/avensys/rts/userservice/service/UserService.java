@@ -1,6 +1,7 @@
 package com.avensys.rts.userservice.service;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -51,6 +52,7 @@ import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
+import com.avensys.rts.userservice.util.PasswordUtil;
 import com.avensys.rts.userservice.util.ResponseUtil;
 
 import jakarta.persistence.criteria.Path;
@@ -194,6 +196,9 @@ public class UserService implements UserDetailsService {
 	}
 
 	public void loginResetPassword(ResetLoginRequestDTO resetLoginRequestDTO) throws ServiceException {
+
+		resetLoginRequestDTO.setPassword(PasswordUtil.decode(resetLoginRequestDTO.getPassword()));
+		resetLoginRequestDTO.setConfirmPassword(PasswordUtil.decode(resetLoginRequestDTO.getConfirmPassword()));
 
 		// add check for username exists in a DB
 		Optional<UserEntity> userOptional = userRepository.findById(resetLoginRequestDTO.getUserId());
