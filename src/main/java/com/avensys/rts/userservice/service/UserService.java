@@ -1,13 +1,13 @@
 package com.avensys.rts.userservice.service;
 
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
+import com.avensys.rts.userservice.APIClient.EmailAPIClient;
+import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
+import com.avensys.rts.userservice.payload.*;
+import com.avensys.rts.userservice.repository.ForgetPasswordRepository;
+import com.netflix.discovery.converters.Auto;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -42,13 +42,6 @@ import org.springframework.web.client.RestTemplate;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
-import com.avensys.rts.userservice.payload.LoginDTO;
-import com.avensys.rts.userservice.payload.LoginResponseDTO;
-import com.avensys.rts.userservice.payload.LogoutResponseDTO;
-import com.avensys.rts.userservice.payload.RefreshTokenDTO;
-import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
-import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
@@ -71,6 +64,12 @@ public class UserService implements UserDetailsService {
 
 	@Autowired
 	private UserRepository userRepository;
+
+	@Autowired
+	private ForgetPasswordRepository forgetPasswordRepository;
+
+	@Autowired
+	EmailAPIClient emailAPIClient;
 
 	@Autowired
 	private KeyCloackUtil keyCloackUtil;
@@ -598,6 +597,40 @@ public class UserService implements UserDetailsService {
 				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
 						null, LocaleContextHolder.getLocale())));
 		return userRepository.findUserIdsUnderManager(manager.getId());
+	}
+
+	@Transactional
+	public String forgetPassword(String email) throws ServiceException {
+		UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new ServiceException(
+				messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST, null, LocaleContextHolder.getLocale())));
+
+		// Check if user have any existing token that is not used or expired using the forget password repo
+//		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository.findByUserAndIsUsedFalseAndExpiryTimeAfter(user);
+//		if (forgetPasswordEntity.isPresent()) {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_FORGET_EMAIL_SENT,
+//					null, LocaleContextHolder.getLocale()));
+//		}
+
+		// Generate a token
+		UUID uuid = UUID.randomUUID();
+		String token = uuid.toString();
+
+		// Save a forget Entity first
+		ForgetPasswordEntity forgetPassword = new ForgetPasswordEntity();
+		forgetPassword.setToken(token);
+		forgetPassword.setUser(user);
+		forgetPassword.setExpiryTime(LocalDateTime.now().plusHours(24));
+
+		forgetPasswordRepository.save(forgetPassword);
+
+		// Send an email to the user
+		EmailMultiRequestDTO emailMultiRequestDTO = new EmailMultiRequestDTO();
+		emailMultiRequestDTO.setTo(new String[] { "kohhxx6@gmail.com" });
+		emailMultiRequestDTO.setSubject("Reset Password");
+		emailMultiRequestDTO.setContent("Please click the link to reset your password: http://localhost:3000/reset-password?token=" + token);
+		System.out.println("EmailMultiRequestDTO: " + emailMultiRequestDTO.getTo() + " " + emailMultiRequestDTO.getSubject() + " " + emailMultiRequestDTO.getContent());
+		emailAPIClient.sendEmail(emailMultiRequestDTO);
+		return token;
 	}
 
 }

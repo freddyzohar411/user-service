@@ -3,6 +3,7 @@ package com.avensys.rts.userservice.controller;
 import java.util.Base64;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -55,6 +56,7 @@ public class UserController {
 
 	@Autowired
 	private JwtUtil jwtUtil;
+
 
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
@@ -238,6 +240,17 @@ public class UserController {
 	@GetMapping("/users-under-manager")
 	public ResponseEntity<Object> getUsersUnderManager() throws ServiceException {
 		return ResponseUtil.generateSuccessResponse(userService.getAllUsersUnderManagerQuery(), HttpStatus.OK, null);
+	}
+
+	@GetMapping("/forget-password/{email}")
+	public ResponseEntity<Object> forgetPassword(@PathVariable String email) {
+		try {
+			userService.forgetPassword(email);
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
+					messageSource.getMessage(MessageConstants.USER_FORGET_EMAIL_NOT_SENT, null, LocaleContextHolder.getLocale()));
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
+		}
 	}
 
 }

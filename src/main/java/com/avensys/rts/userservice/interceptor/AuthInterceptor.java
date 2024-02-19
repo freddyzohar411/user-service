@@ -48,6 +48,12 @@ public class AuthInterceptor implements HandlerInterceptor {
 			return true; // Allow the request to continue without token validation
 		}
 
+		// Special case for patterns like /api/user/forget-password/*
+		if (requestUri.startsWith("/api/user/forget-password/")) {
+			log.info("Allowing request without token validation for URL pattern: {}", requestUri);
+			return true;
+		}
+
 		// Get token from header from axios
 		String authorizationHeader = request.getHeader("Authorization");
 
