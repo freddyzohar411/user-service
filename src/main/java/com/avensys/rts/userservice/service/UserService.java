@@ -601,10 +601,11 @@ public class UserService implements UserDetailsService {
 
 	@Transactional
 	public String forgetPassword(String email) throws ServiceException {
-		UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new ServiceException(
-				messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST, null, LocaleContextHolder.getLocale())));
+		UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new ServiceException(messageSource
+				.getMessage(MessageConstants.ERROR_USER_NOT_EXIST, null, LocaleContextHolder.getLocale())));
 
-		// Check if user have any existing token that is not used or expired using the forget password repo
+		// Check if user have any existing token that is not used or expired using the
+		// forget password repo
 //		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository.findByUserAndIsUsedFalseAndExpiryTimeAfter(user);
 //		if (forgetPasswordEntity.isPresent()) {
 //			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_FORGET_EMAIL_SENT,
@@ -627,10 +628,84 @@ public class UserService implements UserDetailsService {
 		EmailMultiRequestDTO emailMultiRequestDTO = new EmailMultiRequestDTO();
 		emailMultiRequestDTO.setTo(new String[] { "kohhxx6@gmail.com" });
 		emailMultiRequestDTO.setSubject("Reset Password");
-		emailMultiRequestDTO.setContent("Please click the link to reset your password: http://localhost:3000/reset-password?token=" + token);
-		System.out.println("EmailMultiRequestDTO: " + emailMultiRequestDTO.getTo() + " " + emailMultiRequestDTO.getSubject() + " " + emailMultiRequestDTO.getContent());
+		emailMultiRequestDTO.setContent(
+				"Please click the link to reset your password: http://localhost:3000/forget-reset-password?token="
+						+ token);
+		System.out.println("EmailMultiRequestDTO: " + emailMultiRequestDTO.getTo() + " "
+				+ emailMultiRequestDTO.getSubject() + " " + emailMultiRequestDTO.getContent());
 		emailAPIClient.sendEmail(emailMultiRequestDTO);
 		return token;
+	}
+
+	public Boolean validateForgetPasswordToken(String token) {
+		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository.findByToken(token);
+		if (forgetPasswordEntity.isPresent() && !forgetPasswordEntity.get().isUsed()
+				&& forgetPasswordEntity.get().getExpiryTime().isAfter(LocalDateTime.now())) {
+			return true;
+		}
+		return false;
+	}
+
+	@Transactional
+	public void forgetPasswordReset(ForgetResetPasswordRequestDTO forgetResetPasswordRequestDTO)
+			throws ServiceException {
+		// Check token is valid
+		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository
+				.findByToken(forgetResetPasswordRequestDTO.getToken());
+		if ( !forgetPasswordEntity.isPresent() || forgetPasswordEntity.get().isUsed() == true ||
+				 forgetPasswordEntity.get().getExpiryTime().isBefore(LocalDateTime.now())) {
+			throw new ServiceException(messageSource.getMessage(
+					MessageConstants.ERROR_USER_FORGET_PASSWORD_TOKEN_INVALID, null, LocaleContextHolder.getLocale()));
+		}
+
+		// Check password and confirm password are the same
+		String password = PasswordUtil.decode(forgetResetPasswordRequestDTO.getPassword());
+		String confirmPassword = PasswordUtil.decode(forgetResetPasswordRequestDTO.getConfirmPassword());
+		if (!password.equals(confirmPassword)) {
+			throw new ServiceException("Password and confirm password do not match");
+		}
+
+		// Get User from token
+		UserEntity user = forgetPasswordEntity.get().getUser();
+
+		// Check if no user throw exception
+		if (user == null) {
+			throw new ServiceException("User not found");
+		}
+
+		String encodedPassword = passwordEncoder.encode(password);
+
+		user.setPassword(encodedPassword);
+
+		// set fields, as this is new user, active = true and deleted = false
+		user.setIsActive(Boolean.TRUE);
+		user.setIsDeleted(Boolean.FALSE);
+		user.setUpdatedBy(user.getId());
+
+		if (user.getKeycloackId() != null) {
+			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
+			UserRepresentation kcUser = new UserRepresentation();
+			kcUser.setUsername(user.getUsername());
+			kcUser.setFirstName(user.getFirstName());
+			kcUser.setLastName(user.getLastName());
+			kcUser.setEmail(user.getEmail());
+			kcUser.setEmailVerified(true);
+			kcUser.setEnabled(true);
+			kcUser.setCredentials(Collections.singletonList(credential));
+
+			UsersResource usersResource = keyCloackUtil.getRealm().users();
+			usersResource.get(user.getKeycloackId()).update(kcUser);
+			usersResource.get(user.getKeycloackId()).resetPassword(credential);
+			userRepository.save(user);
+
+			// Set forget password entity to used
+			forgetPasswordEntity.get().setUsed(true);
+			forgetPasswordRepository.save(forgetPasswordEntity.get());
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
+					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
+		}
+
 	}
 
 }
