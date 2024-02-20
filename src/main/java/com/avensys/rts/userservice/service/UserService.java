@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import com.avensys.rts.userservice.APIClient.EmailAPIClient;
+import com.avensys.rts.userservice.api.exception.PasswordMismatchException;
+import com.avensys.rts.userservice.api.exception.TokenInvalidException;
 import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
 import com.avensys.rts.userservice.payload.*;
 import com.avensys.rts.userservice.repository.ForgetPasswordRepository;
@@ -662,23 +664,29 @@ public class UserService implements UserDetailsService {
 		return false;
 	}
 
+	/**
+	 * Forget password reset
+	 * 
+	 * @param forgetResetPasswordRequestDTO
+	 * @throws ServiceException
+	 */
 	@Transactional
 	public void forgetPasswordReset(ForgetResetPasswordRequestDTO forgetResetPasswordRequestDTO)
-			throws ServiceException {
+			throws ServiceException, TokenInvalidException, PasswordMismatchException {
 		// Check token is valid
 		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository
 				.findByToken(forgetResetPasswordRequestDTO.getToken());
 		if (!forgetPasswordEntity.isPresent() || forgetPasswordEntity.get().isUsed() == true
 				|| forgetPasswordEntity.get().getExpiryTime().isBefore(LocalDateTime.now())) {
-			throw new ServiceException(messageSource.getMessage(
-					MessageConstants.ERROR_USER_FORGET_PASSWORD_TOKEN_INVALID, null, LocaleContextHolder.getLocale()));
+			throw new TokenInvalidException("Token is invalid");
 		}
 
 		// Check password and confirm password are the same
 		String password = PasswordUtil.decode(forgetResetPasswordRequestDTO.getPassword());
 		String confirmPassword = PasswordUtil.decode(forgetResetPasswordRequestDTO.getConfirmPassword());
 		if (!password.equals(confirmPassword)) {
-			throw new ServiceException("Password and confirm password do not match");
+//			throw new ServiceException("Password and confirm password do not match");
+			throw new PasswordMismatchException("Password and confirm password do not match");
 		}
 
 		// Get User from token
@@ -726,12 +734,13 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Send confirmation email
+	 * 
 	 * @param email
 	 */
-	private void sendConfirmationEmail (String email) {
+	private void sendConfirmationEmail(String email) {
 		EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
 		emailMultiTemplateRequestDTO.setTo(new String[] { email });
-		emailMultiTemplateRequestDTO.setSubject("Confirm password reset");
+		emailMultiTemplateRequestDTO.setSubject("Confirm Password Reset");
 		emailMultiTemplateRequestDTO.setTemplateName("Confirm Reset");
 		emailMultiTemplateRequestDTO.setCategory("Email Templates");
 		emailMultiTemplateRequestDTO.setSubCategory("Confirm Password Reset");

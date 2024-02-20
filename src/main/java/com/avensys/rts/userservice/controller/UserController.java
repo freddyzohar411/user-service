@@ -3,6 +3,8 @@ package com.avensys.rts.userservice.controller;
 import java.util.Base64;
 import java.util.List;
 
+import com.avensys.rts.userservice.api.exception.PasswordMismatchException;
+import com.avensys.rts.userservice.api.exception.TokenInvalidException;
 import com.avensys.rts.userservice.payload.*;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +51,6 @@ public class UserController {
 
 	@Autowired
 	private JwtUtil jwtUtil;
-
 
 	@PostMapping("/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginDTO loginDTO) {
@@ -239,33 +240,38 @@ public class UserController {
 	public ResponseEntity<Object> forgetPassword(@PathVariable String email) {
 		try {
 			userService.forgetPassword(email);
-			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
-					messageSource.getMessage(MessageConstants.USER_FORGET_EMAIL_NOT_SENT, null, LocaleContextHolder.getLocale()));
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK, messageSource
+					.getMessage(MessageConstants.USER_FORGET_EMAIL_NOT_SENT, null, LocaleContextHolder.getLocale()));
 		} catch (ServiceException e) {
-			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
+			return ResponseUtil.generateErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
 		}
 	}
 
 	@GetMapping("/validate-forget-password-token")
 	public ResponseEntity<Object> validateForgetPasswordToken(@RequestParam String token) {
-			Boolean isTokenValid = userService.validateForgetPasswordToken(token);
-			if (!isTokenValid) {
-				return ResponseUtil.generateSuccessResponse(isTokenValid, HttpStatus.BAD_REQUEST,
-						messageSource.getMessage(MessageConstants.ERROR_USER_FORGET_PASSWORD_TOKEN_INVALID, null, LocaleContextHolder.getLocale()));
-			}
-			return ResponseUtil.generateSuccessResponse(isTokenValid, HttpStatus.OK,
-					messageSource.getMessage(MessageConstants.USER_FORGET_PASSWORD_TOKEN_VALID, null, LocaleContextHolder.getLocale()));
+		Boolean isTokenValid = userService.validateForgetPasswordToken(token);
+		if (!isTokenValid) {
+			return ResponseUtil.generateSuccessResponse(isTokenValid, HttpStatus.BAD_REQUEST, messageSource.getMessage(
+					MessageConstants.ERROR_USER_FORGET_PASSWORD_TOKEN_INVALID, null, LocaleContextHolder.getLocale()));
+		}
+		return ResponseUtil.generateSuccessResponse(isTokenValid, HttpStatus.OK, messageSource
+				.getMessage(MessageConstants.USER_FORGET_PASSWORD_TOKEN_VALID, null, LocaleContextHolder.getLocale()));
 
 	}
 
 	@PostMapping("/forget-password/reset")
-	public ResponseEntity<Object> resetPassword(@RequestBody ForgetResetPasswordRequestDTO forgetResetPasswordRequestDTO) {
+	public ResponseEntity<Object> forgetPasswordReset(
+			@RequestBody ForgetResetPasswordRequestDTO forgetResetPasswordRequestDTO) {
 		try {
 			userService.forgetPasswordReset(forgetResetPasswordRequestDTO);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
 					messageSource.getMessage(MessageConstants.USER_UPDATED, null, LocaleContextHolder.getLocale()));
 		} catch (ServiceException e) {
-			return ResponseUtil.generateSuccessResponse(null, HttpStatus.NOT_FOUND, e.getMessage());
+			return ResponseUtil.generateErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+		} catch (TokenInvalidException e) {
+			return ResponseUtil.generateErrorResponse(HttpStatus.UNAUTHORIZED, e.getMessage());
+		} catch (PasswordMismatchException e) {
+			return ResponseUtil.generateErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
 		}
 	}
 
