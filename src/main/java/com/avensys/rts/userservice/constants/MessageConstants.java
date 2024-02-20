@@ -21,4 +21,11 @@ public class MessageConstants {
 	public static final String ERROR_KEYCLOACK_USER_CREATION = "error.keycloack.user.creation";
 	public static final String ERROR_OPERATION = "error.operation";
 	public static final String ERROR_OLD_PASSWORD = "error.oldnewpassword";
+
+
+	public static final String USER_FORGET_EMAIL_NOT_SENT = "user.forget.email.sent";
+	public static final String ERROR_USER_FORGET_EMAIL_SENT = "error.user.forget.email.sent";
+
+	public static final String USER_FORGET_PASSWORD_TOKEN_VALID = "user.forget.password.token.valid";
+	public static final String ERROR_USER_FORGET_PASSWORD_TOKEN_INVALID = "error.user.forget.password.token.invalid";
 }

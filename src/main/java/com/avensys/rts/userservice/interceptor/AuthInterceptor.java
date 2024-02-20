@@ -41,11 +41,18 @@ public class AuthInterceptor implements HandlerInterceptor {
 		// Check if the request URL is in the list of URLs that are allowed without
 		// token
 		List<String> allowedUrls = Arrays.asList("/api/user", "/api/user/signin", "/api/user/signup",
-				"/api/user/logout", "/api/user/validate", "/api/user/refreshToken");
+				"/api/user/logout", "/api/user/validate", "/api/user/refreshToken","/forget-password/reset");
 
 		if (allowedUrls.contains(requestUri)) {
 			log.info("Allowing request without token validation for URL: {}", requestUri);
 			return true; // Allow the request to continue without token validation
+		}
+
+		// Special case for patterns like /api/user/forget-password/*
+		if (requestUri.startsWith("/api/user/forget-password/")
+				|| requestUri.startsWith("/api/user/validate-forget-password-token")) {
+			log.info("Allowing request without token validation for URL pattern: {}", requestUri);
+			return true;
 		}
 
 		// Get token from header from axios

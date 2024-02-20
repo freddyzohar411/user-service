@@ -1,13 +1,15 @@
 package com.avensys.rts.userservice.service;
 
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
+import com.avensys.rts.userservice.APIClient.EmailAPIClient;
+import com.avensys.rts.userservice.api.exception.PasswordMismatchException;
+import com.avensys.rts.userservice.api.exception.TokenInvalidException;
+import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
+import com.avensys.rts.userservice.payload.*;
+import com.avensys.rts.userservice.repository.ForgetPasswordRepository;
+import com.netflix.discovery.converters.Auto;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -42,13 +44,6 @@ import org.springframework.web.client.RestTemplate;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
-import com.avensys.rts.userservice.payload.LoginDTO;
-import com.avensys.rts.userservice.payload.LoginResponseDTO;
-import com.avensys.rts.userservice.payload.LogoutResponseDTO;
-import com.avensys.rts.userservice.payload.RefreshTokenDTO;
-import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
-import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
@@ -71,6 +66,12 @@ public class UserService implements UserDetailsService {
 
 	@Autowired
 	private UserRepository userRepository;
+
+	@Autowired
+	private ForgetPasswordRepository forgetPasswordRepository;
+
+	@Autowired
+	EmailAPIClient emailAPIClient;
 
 	@Autowired
 	private KeyCloackUtil keyCloackUtil;
@@ -598,6 +599,150 @@ public class UserService implements UserDetailsService {
 				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
 						null, LocaleContextHolder.getLocale())));
 		return userRepository.findUserIdsUnderManager(manager.getId());
+	}
+
+	/**
+	 * Forget Password (Send a reset email to user if email exist)
+	 * @param email
+	 * @return
+	 * @throws ServiceException
+	 */
+	@Transactional
+	public String forgetPassword(String email) throws ServiceException {
+		UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new ServiceException(messageSource
+				.getMessage(MessageConstants.ERROR_USER_NOT_EXIST, null, LocaleContextHolder.getLocale())));
+
+		// Check if user have any existing token that is not used or expired (Do not
+		// delete may use)
+//		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository.findByUserAndIsUsedFalseAndExpiryTimeAfter(user);
+//		if (forgetPasswordEntity.isPresent()) {
+//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_FORGET_EMAIL_SENT,
+//					null, LocaleContextHolder.getLocale()));
+//		}
+
+		// Generate a token
+		UUID uuid = UUID.randomUUID();
+		String token = uuid.toString();
+
+		// Save a forget Entity first
+		ForgetPasswordEntity forgetPassword = new ForgetPasswordEntity();
+		forgetPassword.setToken(token);
+		forgetPassword.setUser(user);
+		forgetPassword.setExpiryTime(LocalDateTime.now().plusHours(24));
+
+		forgetPasswordRepository.save(forgetPassword);
+
+		// Send email with template
+		EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
+		emailMultiTemplateRequestDTO.setTo(new String[] { email });
+		emailMultiTemplateRequestDTO.setSubject("Reset Password");
+		emailMultiTemplateRequestDTO.setTemplateName("Reset Template 1");
+		emailMultiTemplateRequestDTO.setCategory("Email Templates");
+		emailMultiTemplateRequestDTO.setSubCategory("Reset Password");
+		Map<String, String> templateMap = new HashMap<>();
+		templateMap.put("RESET_PASSWORD_LINK", "http://localhost:3000/forget-reset-password?token=" + token);
+		emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
+		emailMultiTemplateRequestDTO.setContent(
+				"Please click the link to reset your password: http://localhost:3000/forget-reset-password?token="
+						+ token);
+		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
+
+		return token;
+	}
+
+	/**
+	 * Validate forget password token
+	 * @param token
+	 * @return
+	 */
+	public Boolean validateForgetPasswordToken(String token) {
+		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository.findByToken(token);
+		if (forgetPasswordEntity.isPresent() && !forgetPasswordEntity.get().isUsed()
+				&& forgetPasswordEntity.get().getExpiryTime().isAfter(LocalDateTime.now())) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Forget password reset
+	 * @param forgetResetPasswordRequestDTO
+	 * @throws ServiceException
+	 */
+	@Transactional
+	public void forgetPasswordReset(ForgetResetPasswordRequestDTO forgetResetPasswordRequestDTO)
+			throws ServiceException, TokenInvalidException, PasswordMismatchException {
+		// Check token is valid
+		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository
+				.findByToken(forgetResetPasswordRequestDTO.getToken());
+		if (!forgetPasswordEntity.isPresent() || forgetPasswordEntity.get().isUsed() == true
+				|| forgetPasswordEntity.get().getExpiryTime().isBefore(LocalDateTime.now())) {
+			throw new TokenInvalidException("Token is invalid");
+		}
+
+		// Check password and confirm password are the same
+		String password = PasswordUtil.decode(forgetResetPasswordRequestDTO.getPassword());
+		String confirmPassword = PasswordUtil.decode(forgetResetPasswordRequestDTO.getConfirmPassword());
+		if (!password.equals(confirmPassword)) {
+			throw new PasswordMismatchException("Password and confirm password do not match");
+		}
+
+		// Get User from token
+		UserEntity user = forgetPasswordEntity.get().getUser();
+
+		// Check if no user throw exception
+		if (user == null) {
+			throw new ServiceException("User not found");
+		}
+
+		String encodedPassword = passwordEncoder.encode(password);
+
+		user.setPassword(encodedPassword);
+
+		// set fields, as this is new user, active = true and deleted = false
+		user.setIsActive(Boolean.TRUE);
+		user.setIsDeleted(Boolean.FALSE);
+		user.setUpdatedBy(user.getId());
+
+		if (user.getKeycloackId() != null) {
+			CredentialRepresentation credential = KeyCloackUtil.createPasswordCredentials(password);
+			UserRepresentation kcUser = new UserRepresentation();
+			kcUser.setUsername(user.getUsername());
+			kcUser.setFirstName(user.getFirstName());
+			kcUser.setLastName(user.getLastName());
+			kcUser.setEmail(user.getEmail());
+			kcUser.setEmailVerified(true);
+			kcUser.setEnabled(true);
+			kcUser.setCredentials(Collections.singletonList(credential));
+
+			UsersResource usersResource = keyCloackUtil.getRealm().users();
+			usersResource.get(user.getKeycloackId()).update(kcUser);
+			usersResource.get(user.getKeycloackId()).resetPassword(credential);
+			userRepository.save(user);
+
+			// Set forget password entity to used
+			forgetPasswordEntity.get().setUsed(true);
+			forgetPasswordRepository.save(forgetPasswordEntity.get());
+			sendConfirmationEmail(user.getEmail());
+		} else {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
+					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
+		}
+	}
+
+	/**
+	 * Send confirmation email helper
+	 * @param email
+	 */
+	private void sendConfirmationEmail(String email) {
+		EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
+		emailMultiTemplateRequestDTO.setTo(new String[] { email });
+		emailMultiTemplateRequestDTO.setSubject("Confirm Password Reset");
+		emailMultiTemplateRequestDTO.setTemplateName("Confirm Reset");
+		emailMultiTemplateRequestDTO.setCategory("Email Templates");
+		emailMultiTemplateRequestDTO.setSubCategory("Confirm Password Reset");
+		emailMultiTemplateRequestDTO.setContent("Your password has been reset successfully");
+		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
 	}
 
 }
