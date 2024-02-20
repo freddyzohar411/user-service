@@ -601,13 +601,19 @@ public class UserService implements UserDetailsService {
 		return userRepository.findUserIdsUnderManager(manager.getId());
 	}
 
+	/**
+	 * Forget Password (Send a reset email to user if email exist)
+	 * @param email
+	 * @return
+	 * @throws ServiceException
+	 */
 	@Transactional
 	public String forgetPassword(String email) throws ServiceException {
 		UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new ServiceException(messageSource
 				.getMessage(MessageConstants.ERROR_USER_NOT_EXIST, null, LocaleContextHolder.getLocale())));
 
-		// Check if user have any existing token that is not used or expired using the
-		// forget password repo
+		// Check if user have any existing token that is not used or expired (Do not
+		// delete may use)
 //		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository.findByUserAndIsUsedFalseAndExpiryTimeAfter(user);
 //		if (forgetPasswordEntity.isPresent()) {
 //			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_FORGET_EMAIL_SENT,
@@ -625,17 +631,6 @@ public class UserService implements UserDetailsService {
 		forgetPassword.setExpiryTime(LocalDateTime.now().plusHours(24));
 
 		forgetPasswordRepository.save(forgetPassword);
-
-		// Send an email to the user
-//		EmailMultiRequestDTO emailMultiRequestDTO = new EmailMultiRequestDTO();
-//		emailMultiRequestDTO.setTo(new String[] { "kohhxx6@gmail.com" });
-//		emailMultiRequestDTO.setSubject("Reset Password");
-//		emailMultiRequestDTO.setContent(
-//				"Please click the link to reset your password: http://localhost:3000/forget-reset-password?token="
-//						+ token);
-//		System.out.println("EmailMultiRequestDTO: " + emailMultiRequestDTO.getTo() + " "
-//				+ emailMultiRequestDTO.getSubject() + " " + emailMultiRequestDTO.getContent());
-//		emailAPIClient.sendEmailService(emailMultiRequestDTO);
 
 		// Send email with template
 		EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
@@ -655,6 +650,11 @@ public class UserService implements UserDetailsService {
 		return token;
 	}
 
+	/**
+	 * Validate forget password token
+	 * @param token
+	 * @return
+	 */
 	public Boolean validateForgetPasswordToken(String token) {
 		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository.findByToken(token);
 		if (forgetPasswordEntity.isPresent() && !forgetPasswordEntity.get().isUsed()
@@ -666,7 +666,6 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Forget password reset
-	 * 
 	 * @param forgetResetPasswordRequestDTO
 	 * @throws ServiceException
 	 */
@@ -685,7 +684,6 @@ public class UserService implements UserDetailsService {
 		String password = PasswordUtil.decode(forgetResetPasswordRequestDTO.getPassword());
 		String confirmPassword = PasswordUtil.decode(forgetResetPasswordRequestDTO.getConfirmPassword());
 		if (!password.equals(confirmPassword)) {
-//			throw new ServiceException("Password and confirm password do not match");
 			throw new PasswordMismatchException("Password and confirm password do not match");
 		}
 
@@ -733,8 +731,7 @@ public class UserService implements UserDetailsService {
 	}
 
 	/**
-	 * Send confirmation email
-	 * 
+	 * Send confirmation email helper
 	 * @param email
 	 */
 	private void sendConfirmationEmail(String email) {
