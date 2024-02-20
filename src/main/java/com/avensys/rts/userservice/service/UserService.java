@@ -625,15 +625,31 @@ public class UserService implements UserDetailsService {
 		forgetPasswordRepository.save(forgetPassword);
 
 		// Send an email to the user
-		EmailMultiRequestDTO emailMultiRequestDTO = new EmailMultiRequestDTO();
-		emailMultiRequestDTO.setTo(new String[] { "kohhxx6@gmail.com" });
-		emailMultiRequestDTO.setSubject("Reset Password");
-		emailMultiRequestDTO.setContent(
+//		EmailMultiRequestDTO emailMultiRequestDTO = new EmailMultiRequestDTO();
+//		emailMultiRequestDTO.setTo(new String[] { "kohhxx6@gmail.com" });
+//		emailMultiRequestDTO.setSubject("Reset Password");
+//		emailMultiRequestDTO.setContent(
+//				"Please click the link to reset your password: http://localhost:3000/forget-reset-password?token="
+//						+ token);
+//		System.out.println("EmailMultiRequestDTO: " + emailMultiRequestDTO.getTo() + " "
+//				+ emailMultiRequestDTO.getSubject() + " " + emailMultiRequestDTO.getContent());
+//		emailAPIClient.sendEmailService(emailMultiRequestDTO);
+
+		// Send email with template
+		EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
+		emailMultiTemplateRequestDTO.setTo(new String[] { email });
+		emailMultiTemplateRequestDTO.setSubject("Reset Password");
+		emailMultiTemplateRequestDTO.setTemplateName("Reset Template 1");
+		emailMultiTemplateRequestDTO.setCategory("Email Templates");
+		emailMultiTemplateRequestDTO.setSubCategory("Reset Password");
+		Map<String, String> templateMap = new HashMap<>();
+		templateMap.put("RESET_PASSWORD_LINK", "http://localhost:3000/forget-reset-password?token=" + token);
+		emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
+		emailMultiTemplateRequestDTO.setContent(
 				"Please click the link to reset your password: http://localhost:3000/forget-reset-password?token="
 						+ token);
-		System.out.println("EmailMultiRequestDTO: " + emailMultiRequestDTO.getTo() + " "
-				+ emailMultiRequestDTO.getSubject() + " " + emailMultiRequestDTO.getContent());
-		emailAPIClient.sendEmail(emailMultiRequestDTO);
+		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
+
 		return token;
 	}
 
@@ -652,8 +668,8 @@ public class UserService implements UserDetailsService {
 		// Check token is valid
 		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository
 				.findByToken(forgetResetPasswordRequestDTO.getToken());
-		if ( !forgetPasswordEntity.isPresent() || forgetPasswordEntity.get().isUsed() == true ||
-				 forgetPasswordEntity.get().getExpiryTime().isBefore(LocalDateTime.now())) {
+		if (!forgetPasswordEntity.isPresent() || forgetPasswordEntity.get().isUsed() == true
+				|| forgetPasswordEntity.get().getExpiryTime().isBefore(LocalDateTime.now())) {
 			throw new ServiceException(messageSource.getMessage(
 					MessageConstants.ERROR_USER_FORGET_PASSWORD_TOKEN_INVALID, null, LocaleContextHolder.getLocale()));
 		}
@@ -701,11 +717,26 @@ public class UserService implements UserDetailsService {
 			// Set forget password entity to used
 			forgetPasswordEntity.get().setUsed(true);
 			forgetPasswordRepository.save(forgetPasswordEntity.get());
+			sendConfirmationEmail(user.getEmail());
 		} else {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
 					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
 		}
+	}
 
+	/**
+	 * Send confirmation email
+	 * @param email
+	 */
+	private void sendConfirmationEmail (String email) {
+		EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
+		emailMultiTemplateRequestDTO.setTo(new String[] { email });
+		emailMultiTemplateRequestDTO.setSubject("Confirm password reset");
+		emailMultiTemplateRequestDTO.setTemplateName("Confirm Reset");
+		emailMultiTemplateRequestDTO.setCategory("Email Templates");
+		emailMultiTemplateRequestDTO.setSubCategory("Confirm Password Reset");
+		emailMultiTemplateRequestDTO.setContent("Your password has been reset successfully");
+		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
 	}
 
 }
