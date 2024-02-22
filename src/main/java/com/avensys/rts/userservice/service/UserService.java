@@ -97,6 +97,9 @@ public class UserService implements UserDetailsService {
 	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.authorization-grant-type}")
 	private String grantType;
 
+	@Value("${api.application.url}")
+	private String applicationUrl;
+
 	@Override
 	public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
 		UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
@@ -603,6 +606,7 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Forget Password (Send a reset email to user if email exist)
+	 * 
 	 * @param email
 	 * @return
 	 * @throws ServiceException
@@ -640,11 +644,10 @@ public class UserService implements UserDetailsService {
 		emailMultiTemplateRequestDTO.setCategory("Email Templates");
 		emailMultiTemplateRequestDTO.setSubCategory("Reset Password");
 		Map<String, String> templateMap = new HashMap<>();
-		templateMap.put("RESET_PASSWORD_LINK", "http://localhost:3000/forget-reset-password?token=" + token);
+		templateMap.put("RESET_PASSWORD_LINK", applicationUrl + "/forget-reset-password?token=" + token);
 		emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
-		emailMultiTemplateRequestDTO.setContent(
-				"Please click the link to reset your password: http://localhost:3000/forget-reset-password?token="
-						+ token);
+		emailMultiTemplateRequestDTO.setContent("Please click the link to reset your password: " + applicationUrl
+				+ "/forget-reset-password?token=" + token);
 		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
 
 		return token;
@@ -652,6 +655,7 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Validate forget password token
+	 * 
 	 * @param token
 	 * @return
 	 */
@@ -666,6 +670,7 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Forget password reset
+	 * 
 	 * @param forgetResetPasswordRequestDTO
 	 * @throws ServiceException
 	 */
@@ -732,6 +737,7 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Send confirmation email helper
+	 * 
 	 * @param email
 	 */
 	private void sendConfirmationEmail(String email) {

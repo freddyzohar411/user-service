@@ -1,12 +1,7 @@
 package com.avensys.rts.userservice.controller;
 
-import java.util.Base64;
 import java.util.List;
 
-import com.avensys.rts.userservice.api.exception.PasswordMismatchException;
-import com.avensys.rts.userservice.api.exception.TokenInvalidException;
-import com.avensys.rts.userservice.payload.*;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -27,9 +22,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.avensys.rts.userservice.api.exception.PasswordMismatchException;
 import com.avensys.rts.userservice.api.exception.ServiceException;
+import com.avensys.rts.userservice.api.exception.TokenInvalidException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
+import com.avensys.rts.userservice.payload.ForgetResetPasswordRequestDTO;
+import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
+import com.avensys.rts.userservice.payload.LoginDTO;
+import com.avensys.rts.userservice.payload.LoginResponseDTO;
+import com.avensys.rts.userservice.payload.LogoutResponseDTO;
+import com.avensys.rts.userservice.payload.RefreshTokenDTO;
+import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
+import com.avensys.rts.userservice.payload.UserListingRequestDTO;
+import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.PasswordUtil;
