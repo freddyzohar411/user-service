@@ -141,6 +141,9 @@ public class UserController {
 	public ResponseEntity<?> createUser(@RequestBody UserRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
+			String decodedPassword = PasswordUtil.decode(user.getPassword());
+			user.setPassword(decodedPassword);
+
 			Long userId = jwtUtil.getUserId(token);
 			userService.saveUser(user, userId);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
@@ -155,6 +158,9 @@ public class UserController {
 	public ResponseEntity<?> editUser(@RequestBody UserRequestDTO user,
 			@RequestHeader(name = "Authorization") String token) {
 		try {
+			String decodedPassword = PasswordUtil.decode(user.getPassword());
+			user.setPassword(decodedPassword);
+
 			Long userId = jwtUtil.getUserId(token);
 			userService.update(user, userId);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK,
