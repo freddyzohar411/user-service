@@ -80,7 +80,22 @@ public class ResponseUtil {
 		// Added by He Xiang 11122023
 		if (user.getManager() != null) {
 			dto.setManagerId(user.getManager().getId());
-			dto.setManager(mapUserEntitytoResponse(user.getManager()));
+
+			UserEntity manager = user.getManager();
+			UserResponseDTO managerDTO = new UserResponseDTO();
+			managerDTO.setId(manager.getId());
+			managerDTO.setKeycloackId(manager.getKeycloackId());
+			managerDTO.setFirstName(manager.getFirstName());
+			managerDTO.setLastName(manager.getLastName());
+			managerDTO.setUsername(manager.getUsername());
+			managerDTO.setEmail(manager.getEmail());
+			managerDTO.setMobile(manager.getMobile());
+			managerDTO.setEmployeeId(manager.getEmployeeId());
+			managerDTO.setLocked(manager.getLocked());
+			managerDTO.setEnabled(manager.getEnabled());
+			managerDTO.setCreatedAt(manager.getCreatedAt());
+			managerDTO.setIsTemp(manager.getIsTemp() != null ? manager.getIsTemp() : true);
+			dto.setManager(managerDTO);
 		}
 
 		List<UserGroupResponseDTO> userGroups = new ArrayList<UserGroupResponseDTO>();
