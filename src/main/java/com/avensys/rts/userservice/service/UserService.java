@@ -1,15 +1,16 @@
 package com.avensys.rts.userservice.service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
-import com.avensys.rts.userservice.APIClient.EmailAPIClient;
-import com.avensys.rts.userservice.api.exception.PasswordMismatchException;
-import com.avensys.rts.userservice.api.exception.TokenInvalidException;
-import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
-import com.avensys.rts.userservice.payload.*;
-import com.avensys.rts.userservice.repository.ForgetPasswordRepository;
-import com.netflix.discovery.converters.Auto;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -41,9 +42,23 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.avensys.rts.userservice.APIClient.EmailAPIClient;
+import com.avensys.rts.userservice.api.exception.PasswordMismatchException;
 import com.avensys.rts.userservice.api.exception.ServiceException;
+import com.avensys.rts.userservice.api.exception.TokenInvalidException;
 import com.avensys.rts.userservice.constants.MessageConstants;
+import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
+import com.avensys.rts.userservice.payload.EmailMultiTemplateRequestDTO;
+import com.avensys.rts.userservice.payload.ForgetResetPasswordRequestDTO;
+import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
+import com.avensys.rts.userservice.payload.LoginDTO;
+import com.avensys.rts.userservice.payload.LoginResponseDTO;
+import com.avensys.rts.userservice.payload.LogoutResponseDTO;
+import com.avensys.rts.userservice.payload.RefreshTokenDTO;
+import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
+import com.avensys.rts.userservice.payload.UserRequestDTO;
+import com.avensys.rts.userservice.repository.ForgetPasswordRepository;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
@@ -615,14 +630,6 @@ public class UserService implements UserDetailsService {
 	public String forgetPassword(String email) throws ServiceException {
 		UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new ServiceException(messageSource
 				.getMessage(MessageConstants.ERROR_USER_NOT_EXIST, null, LocaleContextHolder.getLocale())));
-
-		// Check if user have any existing token that is not used or expired (Do not
-		// delete may use)
-//		Optional<ForgetPasswordEntity> forgetPasswordEntity = forgetPasswordRepository.findByUserAndIsUsedFalseAndExpiryTimeAfter(user);
-//		if (forgetPasswordEntity.isPresent()) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_FORGET_EMAIL_SENT,
-//					null, LocaleContextHolder.getLocale()));
-//		}
 
 		// Generate a token
 		UUID uuid = UUID.randomUUID();
