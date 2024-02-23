@@ -1,14 +1,16 @@
 package com.avensys.rts.userservice.payload;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRequestDTO {
@@ -34,7 +36,6 @@ public class UserRequestDTO {
 
 	@Length(min = 10, message = "Password should be atleast 10 number long")
 	private String mobile;
-
 
 	private String employeeId;
 

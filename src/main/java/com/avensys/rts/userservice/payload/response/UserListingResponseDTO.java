@@ -1,12 +1,14 @@
 package com.avensys.rts.userservice.payload.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 
-@Data
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserListingResponseDTO {

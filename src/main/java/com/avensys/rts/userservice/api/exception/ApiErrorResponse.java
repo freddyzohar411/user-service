@@ -2,9 +2,13 @@ package com.avensys.rts.userservice.api.exception;
 
 import java.time.LocalDateTime;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Setter
+@Getter
+@AllArgsConstructor
 public class ApiErrorResponse {
 	private final String guid;
 	private final String errorCode;
