@@ -14,6 +14,7 @@ import java.util.UUID;
 import com.avensys.rts.userservice.APIClient.UserGroupAPIClient;
 import com.avensys.rts.userservice.entity.UserGroupEntity;
 import com.avensys.rts.userservice.payload.*;
+import com.avensys.rts.userservice.repository.UserGroupRepository;
 import com.avensys.rts.userservice.response.HttpResponse;
 import jakarta.persistence.EntityManager;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -71,9 +72,6 @@ import jakarta.ws.rs.core.Response;
 public class UserService implements UserDetailsService {
 
 	@Autowired
-	private EntityManager entityManager;
-
-	@Autowired
 	private RestTemplate restTemplate;
 
 	@Autowired
@@ -82,15 +80,15 @@ public class UserService implements UserDetailsService {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private UserGroupRepository userGroupRepository;
+
 
 	@Autowired
 	private ForgetPasswordRepository forgetPasswordRepository;
 
 	@Autowired
 	EmailAPIClient emailAPIClient;
-
-	@Autowired
-	private UserGroupAPIClient userGroupAPIClient;
 
 	@Autowired
 	private KeyCloackUtil keyCloackUtil;
@@ -140,112 +138,10 @@ public class UserService implements UserDetailsService {
 	 * @param createdByUserId
 	 * @throws ServiceException
 	 */
-//	@Transactional
-//	public void saveUser(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
-//
-		// add check for username exists in a DB
-//		if (userRepository.existsByUsername(userRequest.getUsername())) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//
-//		// add check for email exists in DB
-//		if (userRepository.existsByEmail(userRequest.getEmail())) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//
-//		// add check for email exists in DB
-//		if (userRequest.getEmployeeId() != null && userRepository.existsByEmployeeId(userRequest.getEmployeeId())) {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//
-//		// Create a new user entity
-//		UserEntity user = new UserEntity();
-//
-//		String password = userRequest.getPassword();
-//		String encodedPassword = passwordEncoder.encode(password);
-//		user.setPassword(encodedPassword);
-//
-//		// set fields, as this is new user, active = true and deleted = false
-//		user.setIsActive(Boolean.TRUE);
-//		user.setIsDeleted(Boolean.FALSE);
-//
-//		// Set created by and updated by
-//		if (createdByUserId != null) {
-//			user.setCreatedBy(createdByUserId);
-//			user.setUpdatedBy(createdByUserId);
-//		}
-//
-//		// Set user fields
-//		user.setFirstName(userRequest.getFirstName());
-//		user.setLastName(userRequest.getLastName());
-//		user.setMobile(userRequest.getMobile());
-//		user.setUsername(userRequest.getUsername());
-//		user.setEmployeeId(userRequest.getEmployeeId());
-//		user.setEmail(userRequest.getEmail());
-//		user.setIsTemp(true);
-//
-//		// Added by Hx 11122023 - Add Manager
-//		if (userRequest.getManagerId() != null) {
-//			UserEntity manager = userRepository.findById(userRequest.getManagerId()).orElseThrow(
-//					() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
-//							new Object[] { user.getId() }, LocaleContextHolder.getLocale())));
-//			user.setManager(manager);
-//		}
-//
-//		// Added by Hx 28022024
-//		user.setCountry(userRequest.getCountry());
-//		user.setLocation(userRequest.getLocation());
-//		user.setDesignation(userRequest.getDesignation());
-//
-//		RealmResource realmResource = keyCloackUtil.getRealm();
-//		UsersResource usersResource = realmResource.users();
-//
-//		UserRepresentation newUser = new UserRepresentation();
-//		newUser.setUsername(user.getUsername());
-//		newUser.setFirstName(user.getFirstName());
-//		newUser.setLastName(user.getLastName());
-//		newUser.setEmail(user.getEmail());
-//		newUser.setEmailVerified(true);
-//		newUser.setEnabled(true);
-//
-//		// Set the user's password
-//		CredentialRepresentation passwordCred = KeyCloackUtil.createPasswordCredentials(password);
-//
-//		newUser.setCredentials(Collections.singletonList(passwordCred));
-//		Response response = usersResource.create(newUser);
-//		String kcId = CreatedResponseUtil.getCreatedId(response);
-//		if (kcId != null) {
-//			// Save to the database
-//			user.setKeycloackId(kcId);
-//			UserEntity savedUser = userRepository.save(user);
-//			System.out.println("Request user group: " + userRequest.getGroups());
-//			System.out.println("Is user empty: " + userRequest.getGroups().isEmpty());
-//			System.out.println("The Saved USER ID: " + savedUser.getId());
-//			// Set the group here
-//			if (!userRequest.getGroups().isEmpty()) {
-//				// Call user group API to set user in groups
-//				UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO = new UserAddUserGroupsRequestDTO();
-//				userAddUserGroupsRequestDTO.setUserId(savedUser.getId());
-//				userAddUserGroupsRequestDTO.setUserGroupIds(userRequest.getGroups());
-//				userGroupAPIClient.addUserGroupsToUser(userAddUserGroupsRequestDTO);
-//			}
-//		} else {
-//			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
-//					LocaleContextHolder.getLocale()));
-//		}
-//	}
-
+	@Transactional
 	public void saveUser(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
-		UserEntity user = saveUserReturnUser(userRequest, createdByUserId);
-		assignToUserGroups(userRequest, user);
-	}
 
-	@Transactional(propagation = Propagation.REQUIRES_NEW)
-	public UserEntity saveUserReturnUser(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
-		// add check for username exists in a DB
+		 // add check for username exists in a DB
 		if (userRepository.existsByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
 					LocaleContextHolder.getLocale()));
@@ -322,26 +218,18 @@ public class UserService implements UserDetailsService {
 		if (kcId != null) {
 			// Save to the database
 			user.setKeycloackId(kcId);
-			UserEntity savedUser = userRepository.saveAndFlush(user);
-			System.out.println("Request user group: " + userRequest.getGroups());
-			System.out.println("Is user empty: " + userRequest.getGroups().isEmpty());
-			System.out.println("The Saved USER ID: " + savedUser.getId());
-			// Set the group here
-			return savedUser;
+			UserEntity savedUser = userRepository.save(user);
+			if (!userRequest.getGroups().isEmpty()) {
+				// Call user group API to set user in groups
+				UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO = new UserAddUserGroupsRequestDTO();
+				userAddUserGroupsRequestDTO.setUserId(savedUser.getId());
+				userAddUserGroupsRequestDTO.setUserGroupIds(userRequest.getGroups());
+				addUserGroups(userAddUserGroupsRequestDTO, savedUser);
+			}
+
 		} else {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
 					LocaleContextHolder.getLocale()));
-		}
-
-	}
-
-	public void assignToUserGroups (UserRequestDTO userRequest, UserEntity savedUser) {
-		if (!userRequest.getGroups().isEmpty()) {
-			// Call user group API to set user in groups
-			UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO = new UserAddUserGroupsRequestDTO();
-			userAddUserGroupsRequestDTO.setUserId(savedUser.getId());
-			userAddUserGroupsRequestDTO.setUserGroupIds(userRequest.getGroups());
-			userGroupAPIClient.addUserGroupsToUser(userAddUserGroupsRequestDTO);
 		}
 	}
 
@@ -887,6 +775,26 @@ public class UserService implements UserDetailsService {
 		emailMultiTemplateRequestDTO.setSubCategory("Confirm Password Reset");
 		emailMultiTemplateRequestDTO.setContent("Your password has been reset successfully");
 		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
+	}
+
+	public void addUserGroups(UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO, UserEntity savedUser) throws ServiceException {
+		Long updateUserId =  getUserId();
+		if (savedUser != null) {
+			List<Long> userGroups = userAddUserGroupsRequestDTO.getUserGroupIds();
+			userGroups.forEach(id -> {
+				Optional<UserGroupEntity> userGroupEntity = userGroupRepository.findById(id);
+				if (userGroupEntity.isPresent()) {
+					userGroupEntity.get().addUser(savedUser);
+					userGroupEntity.get().setUpdatedBy(updateUserId);
+					userGroupRepository.save(userGroupEntity.get());
+				}
+			});
+		}
+	}
+
+	private Long getUserId() {
+		String token = JwtUtil.getTokenFromContext();
+		return jwtUtil.getUserId(token);
 	}
 
 }
