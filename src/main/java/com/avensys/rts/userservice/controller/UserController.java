@@ -145,6 +145,7 @@ public class UserController {
 			user.setPassword(decodedPassword);
 
 			Long userId = jwtUtil.getUserId(token);
+			System.out.println("UserGroups: " + user.getGroups());
 			userService.saveUser(user, userId);
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
 					messageSource.getMessage(MessageConstants.USER_CREATED, null, LocaleContextHolder.getLocale()));

@@ -95,4 +95,14 @@ public class UserEntity extends BaseEntity {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<ForgetPasswordEntity> forgetPassword = new ArrayList<>();
 
+	@Column(name = "country")
+	private String country;
+
+	@Column(name = "location")
+	private String location;
+
+	@Column(name = "designation")
+	private String designation;
+
+
 }	
