@@ -79,6 +79,7 @@ public class ResponseUtil {
 		dto.setLocation(user.getLocation());
 		dto.setCountry(user.getCountry());
 		dto.setDesignation(user.getDesignation());
+		dto.setStatus(user.getIsActive());
 
 		// Added by He Xiang 11122023
 		if (user.getManager() != null) {
@@ -101,6 +102,7 @@ public class ResponseUtil {
 			managerDTO.setLocation(manager.getLocation());
 			managerDTO.setCountry(manager.getCountry());
 			managerDTO.setDesignation(manager.getDesignation());
+			managerDTO.setStatus(manager.getIsActive());
 			dto.setManager(managerDTO);
 		}
 
