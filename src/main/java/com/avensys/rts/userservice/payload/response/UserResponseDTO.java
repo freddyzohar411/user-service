@@ -31,4 +31,9 @@ public class UserResponseDTO {
 	private Long managerId;
 	private LocalDateTime createdAt;
 	private UserResponseDTO Manager;
+
+	// Added 29022024 - Koh He Xiang
+	private String location;
+	private String country;
+	private String designation;
 }

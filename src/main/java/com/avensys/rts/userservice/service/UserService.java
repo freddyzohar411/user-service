@@ -11,12 +11,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.avensys.rts.userservice.APIClient.UserGroupAPIClient;
 import com.avensys.rts.userservice.entity.UserGroupEntity;
 import com.avensys.rts.userservice.payload.*;
 import com.avensys.rts.userservice.repository.UserGroupRepository;
-import com.avensys.rts.userservice.response.HttpResponse;
-import jakarta.persistence.EntityManager;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -43,7 +40,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -220,7 +216,6 @@ public class UserService implements UserDetailsService {
 			user.setKeycloackId(kcId);
 			UserEntity savedUser = userRepository.save(user);
 			if (!userRequest.getGroups().isEmpty()) {
-				// Call user group API to set user in groups
 				UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO = new UserAddUserGroupsRequestDTO();
 				userAddUserGroupsRequestDTO.setUserId(savedUser.getId());
 				userAddUserGroupsRequestDTO.setUserGroupIds(userRequest.getGroups());
@@ -353,6 +348,9 @@ public class UserService implements UserDetailsService {
 			userById.setEmail(userRequest.getEmail());
 			userById.setMobile(userRequest.getMobile());
 			userById.setUpdatedBy(createdByUserId);
+			userById.setLocation(userRequest.getLocation());
+			userById.setCountry(userRequest.getCountry());
+			userById.setDesignation(userRequest.getDesignation());
 
 			if (userRequest.getEmployeeId() != null) {
 				userById.setEmployeeId(userRequest.getEmployeeId());
