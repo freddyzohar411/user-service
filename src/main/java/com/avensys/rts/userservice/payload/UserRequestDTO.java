@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -40,4 +42,13 @@ public class UserRequestDTO {
 	private String employeeId;
 
 	private Long managerId;
+
+	// Added 28022024 - Koh He Xiang
+	private String location;
+
+	private String country;
+
+	private String designation;
+
+	private List<Long> groups;
 }

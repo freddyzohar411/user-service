@@ -11,6 +11,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import com.avensys.rts.userservice.entity.UserGroupEntity;
+import com.avensys.rts.userservice.payload.*;
+import com.avensys.rts.userservice.repository.UserGroupRepository;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -49,15 +52,6 @@ import com.avensys.rts.userservice.api.exception.TokenInvalidException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.payload.EmailMultiTemplateRequestDTO;
-import com.avensys.rts.userservice.payload.ForgetResetPasswordRequestDTO;
-import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
-import com.avensys.rts.userservice.payload.LoginDTO;
-import com.avensys.rts.userservice.payload.LoginResponseDTO;
-import com.avensys.rts.userservice.payload.LogoutResponseDTO;
-import com.avensys.rts.userservice.payload.RefreshTokenDTO;
-import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
-import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.repository.ForgetPasswordRepository;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.JwtUtil;
@@ -83,6 +77,10 @@ public class UserService implements UserDetailsService {
 	private UserRepository userRepository;
 
 	@Autowired
+	private UserGroupRepository userGroupRepository;
+
+
+	@Autowired
 	private ForgetPasswordRepository forgetPasswordRepository;
 
 	@Autowired
@@ -93,6 +91,9 @@ public class UserService implements UserDetailsService {
 
 	@Autowired
 	private MessageSource messageSource;
+
+	@Autowired
+	private JwtUtil jwtUtil;
 
 	@Value("${spring.security.oauth2.client.provider.keycloak.token-uri}")
 	private String tokenUrl;
@@ -133,9 +134,10 @@ public class UserService implements UserDetailsService {
 	 * @param createdByUserId
 	 * @throws ServiceException
 	 */
+	@Transactional
 	public void saveUser(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 
-		// add check for username exists in a DB
+		 // add check for username exists in a DB
 		if (userRepository.existsByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
 					LocaleContextHolder.getLocale()));
@@ -187,6 +189,11 @@ public class UserService implements UserDetailsService {
 			user.setManager(manager);
 		}
 
+		// Added by Hx 28022024
+		user.setCountry(userRequest.getCountry());
+		user.setLocation(userRequest.getLocation());
+		user.setDesignation(userRequest.getDesignation());
+
 		RealmResource realmResource = keyCloackUtil.getRealm();
 		UsersResource usersResource = realmResource.users();
 
@@ -207,7 +214,14 @@ public class UserService implements UserDetailsService {
 		if (kcId != null) {
 			// Save to the database
 			user.setKeycloackId(kcId);
-			userRepository.save(user);
+			UserEntity savedUser = userRepository.save(user);
+			if (!userRequest.getGroups().isEmpty()) {
+				UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO = new UserAddUserGroupsRequestDTO();
+				userAddUserGroupsRequestDTO.setUserId(savedUser.getId());
+				userAddUserGroupsRequestDTO.setUserGroupIds(userRequest.getGroups());
+				addUserGroups(userAddUserGroupsRequestDTO, savedUser);
+			}
+
 		} else {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_KEYCLOACK_USER_CREATION, null,
 					LocaleContextHolder.getLocale()));
@@ -334,6 +348,9 @@ public class UserService implements UserDetailsService {
 			userById.setEmail(userRequest.getEmail());
 			userById.setMobile(userRequest.getMobile());
 			userById.setUpdatedBy(createdByUserId);
+			userById.setLocation(userRequest.getLocation());
+			userById.setCountry(userRequest.getCountry());
+			userById.setDesignation(userRequest.getDesignation());
 
 			if (userRequest.getEmployeeId() != null) {
 				userById.setEmployeeId(userRequest.getEmployeeId());
@@ -756,6 +773,26 @@ public class UserService implements UserDetailsService {
 		emailMultiTemplateRequestDTO.setSubCategory("Confirm Password Reset");
 		emailMultiTemplateRequestDTO.setContent("Your password has been reset successfully");
 		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
+	}
+
+	public void addUserGroups(UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO, UserEntity savedUser) throws ServiceException {
+		Long updateUserId =  getUserId();
+		if (savedUser != null) {
+			List<Long> userGroups = userAddUserGroupsRequestDTO.getUserGroupIds();
+			userGroups.forEach(id -> {
+				Optional<UserGroupEntity> userGroupEntity = userGroupRepository.findById(id);
+				if (userGroupEntity.isPresent()) {
+					userGroupEntity.get().addUser(savedUser);
+					userGroupEntity.get().setUpdatedBy(updateUserId);
+					userGroupRepository.save(userGroupEntity.get());
+				}
+			});
+		}
+	}
+
+	private Long getUserId() {
+		String token = JwtUtil.getTokenFromContext();
+		return jwtUtil.getUserId(token);
 	}
 
 }

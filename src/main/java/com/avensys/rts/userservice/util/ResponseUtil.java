@@ -76,6 +76,9 @@ public class ResponseUtil {
 		dto.setEnabled(user.getEnabled());
 		dto.setCreatedAt(user.getCreatedAt());
 		dto.setIsTemp(user.getIsTemp() != null ? user.getIsTemp() : true);
+		dto.setLocation(user.getLocation());
+		dto.setCountry(user.getCountry());
+		dto.setDesignation(user.getDesignation());
 
 		// Added by He Xiang 11122023
 		if (user.getManager() != null) {
@@ -95,6 +98,9 @@ public class ResponseUtil {
 			managerDTO.setEnabled(manager.getEnabled());
 			managerDTO.setCreatedAt(manager.getCreatedAt());
 			managerDTO.setIsTemp(manager.getIsTemp() != null ? manager.getIsTemp() : true);
+			managerDTO.setLocation(manager.getLocation());
+			managerDTO.setCountry(manager.getCountry());
+			managerDTO.setDesignation(manager.getDesignation());
 			dto.setManager(managerDTO);
 		}
 
