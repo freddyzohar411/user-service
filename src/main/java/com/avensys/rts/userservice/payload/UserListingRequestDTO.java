@@ -15,4 +15,6 @@ public class UserListingRequestDTO {
 	private String sortBy;
 	private String sortDirection;
 	private String searchTerm;
+	//new
+	private String filterType;
 }
