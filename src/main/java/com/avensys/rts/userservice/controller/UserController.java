@@ -230,10 +230,12 @@ public class UserController {
 		String sortBy = userListingRequestDTO.getSortBy();
 		String sortDirection = userListingRequestDTO.getSortDirection();
 		String searchTerm = userListingRequestDTO.getSearchTerm();
+		// new
+		String filterType = userListingRequestDTO.getFilterType();
 		if (searchTerm == null || searchTerm.isEmpty()) {
 			return ResponseUtil.generateSuccessResponse(
 					ResponseUtil.mapUserPageToUserListingResponseDTO(
-							userService.getUserListingPage(page, pageSize, sortBy, sortDirection)),
+							userService.getUserListingPage(page, pageSize, sortBy, sortDirection, filterType)),
 					HttpStatus.OK,
 					messageSource.getMessage(MessageConstants.USER_SUCCESS, null, LocaleContextHolder.getLocale()));
 		}

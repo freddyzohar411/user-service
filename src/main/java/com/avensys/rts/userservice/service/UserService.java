@@ -79,7 +79,6 @@ public class UserService implements UserDetailsService {
 	@Autowired
 	private UserGroupRepository userGroupRepository;
 
-
 	@Autowired
 	private ForgetPasswordRepository forgetPasswordRepository;
 
@@ -137,7 +136,7 @@ public class UserService implements UserDetailsService {
 	@Transactional
 	public void saveUser(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 
-		 // add check for username exists in a DB
+		// add check for username exists in a DB
 		if (userRepository.existsByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
 					LocaleContextHolder.getLocale()));
@@ -511,7 +510,8 @@ public class UserService implements UserDetailsService {
 		return user;
 	}
 
-	public Page<UserEntity> getUserListingPage(Integer page, Integer size, String sortBy, String sortDirection) {
+	public Page<UserEntity> getUserListingPage(Integer page, Integer size, String sortBy, String sortDirection,
+			String filterType) {
 		Sort sort = null;
 		if (sortBy != null) {
 			// Get direction based on sort direction
@@ -530,8 +530,18 @@ public class UserService implements UserDetailsService {
 		} else {
 			pageable = PageRequest.of(page, size, sort);
 		}
-		Page<UserEntity> usersPage = userRepository.findAllByPaginationAndSort(false, true, pageable);
-		return usersPage;
+		// new
+		if (filterType.equalsIgnoreCase("deleted")) {
+			Page<UserEntity> usersPage = userRepository.findAllByIsInDeletedPaginationAndSort(true, pageable);
+			return usersPage;
+		} else if (filterType.equalsIgnoreCase("inactive")) {
+			Page<UserEntity> usersPage = userRepository.findAllByPaginationAndSort(false, false, pageable);
+			return usersPage;
+		} else {
+			Page<UserEntity> usersPage = userRepository.findAllByPaginationAndSort(false, true, pageable);
+
+			return usersPage;
+		}
 	}
 
 	public Page<UserEntity> getUserListingPageWithSearch(Integer page, Integer size, String sortBy,
@@ -783,8 +793,9 @@ public class UserService implements UserDetailsService {
 		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
 	}
 
-	public void addUserGroups(UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO, UserEntity savedUser) throws ServiceException {
-		Long updateUserId =  getUserId();
+	public void addUserGroups(UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO, UserEntity savedUser)
+			throws ServiceException {
+		Long updateUserId = getUserId();
 		if (savedUser != null) {
 			List<Long> userGroups = userAddUserGroupsRequestDTO.getUserGroupIds();
 			userGroups.forEach(id -> {
