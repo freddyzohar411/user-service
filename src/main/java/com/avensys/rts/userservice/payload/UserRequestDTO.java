@@ -51,4 +51,7 @@ public class UserRequestDTO {
 	private String designation;
 
 	private List<Long> groups;
+
+	// Added 29020224
+	private Boolean status;
 }

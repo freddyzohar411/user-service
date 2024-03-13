@@ -194,6 +194,9 @@ public class UserService implements UserDetailsService {
 		user.setLocation(userRequest.getLocation());
 		user.setDesignation(userRequest.getDesignation());
 
+		// Added by Hx 29022024
+		user.setIsActive(userRequest.getStatus());
+
 		RealmResource realmResource = keyCloackUtil.getRealm();
 		UsersResource usersResource = realmResource.users();
 
@@ -348,9 +351,14 @@ public class UserService implements UserDetailsService {
 			userById.setEmail(userRequest.getEmail());
 			userById.setMobile(userRequest.getMobile());
 			userById.setUpdatedBy(createdByUserId);
+
+			// Added by Hx 29022024
 			userById.setLocation(userRequest.getLocation());
 			userById.setCountry(userRequest.getCountry());
 			userById.setDesignation(userRequest.getDesignation());
+
+			// Added by Hx 29022024
+			userById.setIsActive(userRequest.getStatus());
 
 			if (userRequest.getEmployeeId() != null) {
 				userById.setEmployeeId(userRequest.getEmployeeId());

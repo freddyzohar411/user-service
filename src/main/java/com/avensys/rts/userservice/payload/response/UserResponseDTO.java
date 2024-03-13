@@ -36,4 +36,7 @@ public class UserResponseDTO {
 	private String location;
 	private String country;
 	private String designation;
+
+	//Added 29022024 - Koh He Xiang
+	private Boolean status;
 }
