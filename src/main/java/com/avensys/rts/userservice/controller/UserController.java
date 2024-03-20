@@ -107,6 +107,21 @@ public class UserController {
 		}
 	}
 
+	@PostMapping("/add/massImport")
+	public ResponseEntity<?> createUsers(@RequestBody List<UserRequestDTO> users,
+										 @RequestHeader(name = "Authorization") String token) {
+		try {
+			Long userId = jwtUtil.getUserId(token);
+			System.out.println("User ID: " + userId);
+			userService.saveUsers(users, userId); // Call saveUsers instead of saveUser
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
+					messageSource.getMessage(MessageConstants.USERS_REGISTERED, null, LocaleContextHolder.getLocale()));
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, e.getMessage());
+		}
+	}
+
+
 	/**
 	 * @author Rahul Sahu
 	 * @param resetLoginRequestDTO

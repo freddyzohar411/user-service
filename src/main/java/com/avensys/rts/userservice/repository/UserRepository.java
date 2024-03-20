@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.avensys.rts.userservice.payload.UserRequestDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -45,4 +46,5 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpec
 			+ "SELECT u.id, u.manager FROM users u JOIN UserHierarchy h ON u.manager = h.id) "
 			+ "SELECT id FROM UserHierarchy WHERE id IS NOT NULL", nativeQuery = true)
 	Set<Long> findUserIdsUnderManager(@Param("userId") Long userId);
+
 }
