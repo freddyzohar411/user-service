@@ -1,5 +1,7 @@
 package com.avensys.rts.userservice.entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -87,4 +89,20 @@ public class UserEntity extends BaseEntity {
 	@JsonBackReference
 	private UserEntity manager;
 
-}
+	@Column(name = "temp")
+	private Boolean isTemp = true;
+
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<ForgetPasswordEntity> forgetPassword = new ArrayList<>();
+
+	@Column(name = "country")
+	private String country;
+
+	@Column(name = "location")
+	private String location;
+
+	@Column(name = "designation")
+	private String designation;
+
+
+}	

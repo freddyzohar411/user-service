@@ -4,16 +4,17 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
- * @author Rahul Sahu 
- * This class is used to create a custom response for the API
+ * @author Rahul Sahu This class is used to create a custom response for the API
  *         calls. It is used to return a custom response to the client.
  */
 
-@Data
+@Setter
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class HttpResponse {

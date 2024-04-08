@@ -11,10 +11,10 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import com.avensys.rts.userservice.exception.JWTException;
 import com.avensys.rts.userservice.util.JwtUtil;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -31,7 +31,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-			throws JWTException {
+			throws ExpiredJwtException {
 		log.info("Auth Pre-handling");
 
 		// Get the request URL
@@ -40,12 +40,19 @@ public class AuthInterceptor implements HandlerInterceptor {
 
 		// Check if the request URL is in the list of URLs that are allowed without
 		// token
-		List<String> allowedUrls = Arrays.asList("/api/user","/api/user/signin", "/api/user/signup", "/api/user/logout",
-				"/api/user/validate");
+		List<String> allowedUrls = Arrays.asList("/api/user/signin", "/api/user/signup", "/api/user/logout",
+				"/api/user/validate", "/api/user/refreshToken");
 
 		if (allowedUrls.contains(requestUri)) {
 			log.info("Allowing request without token validation for URL: {}", requestUri);
 			return true; // Allow the request to continue without token validation
+		}
+
+		// Special case for patterns like /api/user/forget-password/*
+		if (requestUri.startsWith("/api/user/forget-password/")
+				|| requestUri.startsWith("/api/user/validate-forget-password-token")) {
+			log.info("Allowing request without token validation for URL pattern: {}", requestUri);
+			return true;
 		}
 
 		// Get token from header from axios
@@ -81,7 +88,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 			}
 
 		} catch (Exception e) {
-			throw new JWTException(e.getLocalizedMessage());
+			throw new ExpiredJwtException(null, null, e.getLocalizedMessage());
 		}
 		return true; // Continue the request processing chain
 	}

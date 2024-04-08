@@ -49,4 +49,11 @@ public class UserGroupEntity extends BaseEntity {
 	@JoinTable(name = "user_group_roles", joinColumns = @JoinColumn(name = "user_group_id", referencedColumnName = "id"), inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
 	private Set<RoleEntity> roleEntities;
 
+	public void addUser(UserEntity userEntity) {
+		if (this.users == null) {
+			this.users = new java.util.HashSet<>();
+		}
+		this.users.add(userEntity);
+	}
+
 }

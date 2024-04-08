@@ -1,6 +1,11 @@
 package com.avensys.rts.userservice.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -69,11 +74,35 @@ public class ResponseUtil {
 		dto.setLocked(user.getLocked());
 		dto.setEnabled(user.getEnabled());
 		dto.setCreatedAt(user.getCreatedAt());
+		dto.setIsTemp(user.getIsTemp() != null ? user.getIsTemp() : true);
+		dto.setLocation(user.getLocation());
+		dto.setCountry(user.getCountry());
+		dto.setDesignation(user.getDesignation());
+		dto.setStatus(user.getIsActive());
 
 		// Added by He Xiang 11122023
 		if (user.getManager() != null) {
 			dto.setManagerId(user.getManager().getId());
-			dto.setManager(mapUserEntitytoResponse(user.getManager()));
+
+			UserEntity manager = user.getManager();
+			UserResponseDTO managerDTO = new UserResponseDTO();
+			managerDTO.setId(manager.getId());
+			managerDTO.setKeycloackId(manager.getKeycloackId());
+			managerDTO.setFirstName(manager.getFirstName());
+			managerDTO.setLastName(manager.getLastName());
+			managerDTO.setUsername(manager.getUsername());
+			managerDTO.setEmail(manager.getEmail());
+			managerDTO.setMobile(manager.getMobile());
+			managerDTO.setEmployeeId(manager.getEmployeeId());
+			managerDTO.setLocked(manager.getLocked());
+			managerDTO.setEnabled(manager.getEnabled());
+			managerDTO.setCreatedAt(manager.getCreatedAt());
+			managerDTO.setIsTemp(manager.getIsTemp() != null ? manager.getIsTemp() : true);
+			managerDTO.setLocation(manager.getLocation());
+			managerDTO.setCountry(manager.getCountry());
+			managerDTO.setDesignation(manager.getDesignation());
+			managerDTO.setStatus(manager.getIsActive());
+			dto.setManager(managerDTO);
 		}
 
 		List<UserGroupResponseDTO> userGroups = new ArrayList<UserGroupResponseDTO>();
@@ -81,7 +110,7 @@ public class ResponseUtil {
 		if (user.getGroupEntities() != null && user.getGroupEntities().size() > 0) {
 			user.getGroupEntities().forEach(group -> {
 				UserGroupResponseDTO groupResponseDTO = new UserGroupResponseDTO();
-				groupResponseDTO.setId(group.getId()); //Added by HX
+				groupResponseDTO.setId(group.getId()); // Added by HX
 				groupResponseDTO.setGroupName(group.getUserGroupName());
 				groupResponseDTO.setGroupDescription(group.getUserGroupDescription());
 

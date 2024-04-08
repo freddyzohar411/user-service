@@ -3,7 +3,6 @@ package com.avensys.rts.userservice.payload;
 import com.avensys.rts.userservice.payload.response.UserResponseDTO;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,7 +11,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 public class LoginResponseDTO {
 	private String access_token;
 	private String refresh_token;
