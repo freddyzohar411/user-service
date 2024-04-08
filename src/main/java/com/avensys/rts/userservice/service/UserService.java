@@ -729,6 +729,19 @@ public class UserService implements UserDetailsService {
 	}
 
 	/**
+	 * Get all users under a manager (In SQL) - Entity
+	 * @return
+	 * @throws ServiceException
+	 */
+	public Set<UserEntity> getAllUsersEntityUnderManagerQuery() throws ServiceException {
+		String email = JwtUtil.getEmailFromContext();
+		UserEntity manager = userRepository.findByUsernameOrEmail(email, email)
+				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
+						null, LocaleContextHolder.getLocale())));
+		return userRepository.findUserEntitiesUnderManager(manager.getId());
+	}
+
+	/**
 	 * Forget Password (Send a reset email to user if email exist)
 	 * 
 	 * @param email

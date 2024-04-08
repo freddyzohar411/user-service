@@ -2,6 +2,7 @@ package com.avensys.rts.userservice.controller;
 
 import java.util.List;
 
+import com.avensys.rts.userservice.payload.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -27,15 +28,6 @@ import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.api.exception.TokenInvalidException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.payload.ForgetResetPasswordRequestDTO;
-import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
-import com.avensys.rts.userservice.payload.LoginDTO;
-import com.avensys.rts.userservice.payload.LoginResponseDTO;
-import com.avensys.rts.userservice.payload.LogoutResponseDTO;
-import com.avensys.rts.userservice.payload.RefreshTokenDTO;
-import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
-import com.avensys.rts.userservice.payload.UserListingRequestDTO;
-import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.service.UserService;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.PasswordUtil;
@@ -249,6 +241,14 @@ public class UserController {
 	@GetMapping("/users-under-manager")
 	public ResponseEntity<Object> getUsersUnderManager() throws ServiceException {
 		return ResponseUtil.generateSuccessResponse(userService.getAllUsersUnderManagerQuery(), HttpStatus.OK, null);
+	}
+
+	@GetMapping("/users-under-manager-entity")
+	public ResponseEntity<Object> getUsersUnderManagerEntity() throws ServiceException {
+		List<UserEntity> users = userService.getAllUsersEntityUnderManagerQuery().stream().toList();
+		UserResponseListDTO userResponseListDTO = new UserResponseListDTO();
+		userResponseListDTO.setUsers(ResponseUtil.mapUserEntityListtoResponse(users));
+		return ResponseUtil.generateSuccessResponse(userResponseListDTO, HttpStatus.OK, null);
 	}
 
 	@GetMapping("/forget-password/{email}")
