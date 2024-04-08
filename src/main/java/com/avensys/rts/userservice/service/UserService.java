@@ -418,8 +418,7 @@ public class UserService implements UserDetailsService {
 			try {
 				EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
 				emailMultiTemplateRequestDTO.setTo(new String[] { savedUser.getEmail() });
-				emailMultiTemplateRequestDTO
-						.setSubject("Congratulations! Your password has been reset successfully.");
+				emailMultiTemplateRequestDTO.setSubject("Congratulations! Your password has been reset successfully.");
 				emailMultiTemplateRequestDTO.setTemplateName("User Password Reset");
 				emailMultiTemplateRequestDTO.setCategory(EMAIL_TEMPLATE);
 
@@ -527,8 +526,7 @@ public class UserService implements UserDetailsService {
 			try {
 				EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
 				emailMultiTemplateRequestDTO.setTo(new String[] { savedUser.getEmail() });
-				emailMultiTemplateRequestDTO
-						.setSubject("Congratulations! Your profile has been updated successfully.");
+				emailMultiTemplateRequestDTO.setSubject("Congratulations! Your profile has been updated successfully.");
 				emailMultiTemplateRequestDTO.setTemplateName("User Profile Update");
 				emailMultiTemplateRequestDTO.setCategory(EMAIL_TEMPLATE);
 
@@ -540,6 +538,21 @@ public class UserService implements UserDetailsService {
 				emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
 			} catch (Exception e) {
 				log.error("Error:", e);
+			}
+
+			if (!userRequest.getGroups().isEmpty()) {
+				List<UserGroupEntity> groups = userGroupRepository.findAll();
+				if (groups.size() > 0) {
+					groups.forEach(grp -> {
+						if (grp.getUsers().contains(userById)) {
+							grp.getUsers().remove(userById);
+						}
+					});
+				}
+				UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO = new UserAddUserGroupsRequestDTO();
+				userAddUserGroupsRequestDTO.setUserId(savedUser.getId());
+				userAddUserGroupsRequestDTO.setUserGroupIds(userRequest.getGroups());
+				addUserGroups(userAddUserGroupsRequestDTO, savedUser);
 			}
 
 		} else {
@@ -834,6 +847,7 @@ public class UserService implements UserDetailsService {
 
 	/**
 	 * Get all users under a manager (In SQL) - Entity
+	 * 
 	 * @return
 	 * @throws ServiceException
 	 */

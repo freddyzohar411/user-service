@@ -12,7 +12,8 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.avensys.rts.userservice.entity.UserGroupEntity;
 
-public interface UserGroupRepository extends JpaRepository<UserGroupEntity, Long>, JpaSpecificationExecutor<UserGroupEntity> {
+public interface UserGroupRepository
+		extends JpaRepository<UserGroupEntity, Long>, JpaSpecificationExecutor<UserGroupEntity> {
 	Boolean existsByUserGroupName(String userGroupName);
 
 	Optional<UserGroupEntity> findByUserGroupName(String userGroupName);
@@ -24,4 +25,5 @@ public interface UserGroupRepository extends JpaRepository<UserGroupEntity, Long
 	Page<UserGroupEntity> findAllByPaginationAndSort(Boolean isDeleted, Boolean isActive, Pageable pageable);
 
 	Page<UserGroupEntity> findAll(Specification<UserGroupEntity> specification, Pageable pageable);
+
 }
