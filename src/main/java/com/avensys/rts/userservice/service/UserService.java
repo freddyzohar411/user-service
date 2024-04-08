@@ -728,6 +728,11 @@ public class UserService implements UserDetailsService {
 		return userRepository.findUserIdsUnderManager(manager.getId());
 	}
 
+	/**
+	 * Get all users under a manager (In SQL) - Entity
+	 * @return
+	 * @throws ServiceException
+	 */
 	public Set<UserEntity> getAllUsersEntityUnderManagerQuery() throws ServiceException {
 		String email = JwtUtil.getEmailFromContext();
 		UserEntity manager = userRepository.findByUsernameOrEmail(email, email)
