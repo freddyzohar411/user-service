@@ -51,4 +51,10 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpec
 			+ "SELECT id FROM UserHierarchy WHERE id IS NOT NULL", nativeQuery = true)
 	Set<Long> findUserIdsUnderManager(@Param("userId") Long userId);
 
+	@Query(value = "WITH RECURSIVE UserHierarchy AS (" +
+			"SELECT * FROM users WHERE id = :userId " +
+			"UNION " +
+			"SELECT u.* FROM users u JOIN UserHierarchy h ON u.manager = h.id) " +
+			"SELECT * FROM UserHierarchy WHERE id IS NOT NULL", nativeQuery = true)
+	Set<UserEntity> findUserEntitiesUnderManager(@Param("userId") Long userId);
 }
