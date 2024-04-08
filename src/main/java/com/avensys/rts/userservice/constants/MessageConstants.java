@@ -5,6 +5,7 @@ public class MessageConstants {
 	public static final String USER_CREATED = "user.created";
 	public static final String USER_UPDATED = "user.updated";
 	public static final String USER_REGISTERED = "user.registered";
+	public static final String USERS_REGISTERED = "users.registered";
 	public static final String USER_DELETED = "user.deleted";
 	public static final String USER_LOGIN_SUCCESS = "user.login.success";
 	public static final String USER_LOGOUT_SUCCESS = "user.logout.success";

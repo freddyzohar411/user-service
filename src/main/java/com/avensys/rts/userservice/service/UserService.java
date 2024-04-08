@@ -264,6 +264,110 @@ public class UserService implements UserDetailsService {
 		}
 	}
 
+	@Transactional
+	public void saveUsers(List<UserRequestDTO> userRequests, Long createdByUserId) throws ServiceException {
+		List<UserEntity> usersToSave = new ArrayList<>();
+		for (UserRequestDTO userRequest : userRequests) {
+			System.out.println("Creating user for: " + userRequest.getFirstName());
+			UserEntity user = createUserFromRequest(userRequest, createdByUserId);
+			usersToSave.add(user);
+
+		}
+	}
+
+	public UserEntity createUserFromRequest(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
+		// add check for username exists in a DB
+		if (userRepository.existsByUsername(userRequest.getUsername())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		// add check for email exists in DB
+		if (userRepository.existsByEmail(userRequest.getEmail())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		// add check for email exists in DB
+		if (userRequest.getEmployeeId() != null && userRepository.existsByEmployeeId(userRequest.getEmployeeId())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		UserEntity user = new UserEntity();
+		// Set Password
+		String password = "password1234";
+		String encodedPassword = passwordEncoder.encode(password);
+		user.setPassword(encodedPassword);
+		// Set Status
+		user.setIsDeleted(Boolean.FALSE);
+		user.setIsActive(Boolean.TRUE);
+		// Set Created and Updated By
+		if (createdByUserId != null) {
+			user.setCreatedBy(createdByUserId);
+			user.setUpdatedBy(createdByUserId);
+		}
+
+		// Set User Fields
+		user.setFirstName(userRequest.getFirstName());
+		user.setLastName(userRequest.getLastName());
+		user.setUsername(userRequest.getUsername());
+		user.setEmail(userRequest.getEmail());
+		user.setMobile(userRequest.getMobile());
+		user.setEmployeeId(userRequest.getEmployeeId());
+		user.setIsTemp(true);
+		// Set Other User Fields
+		user.setCountry(null);
+		user.setDesignation(null);
+		user.setLocation(null);
+		// Set Manager
+		if (userRequest.getManagerId() != null) {
+			UserEntity manager = userRepository.findById(userRequest.getManagerId()).orElseThrow(
+					() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
+							new Object[] { user.getId() }, LocaleContextHolder.getLocale())));
+			user.setManager(manager);
+		}
+
+		try {
+			RealmResource realmResource = keyCloackUtil.getRealm();
+			UsersResource usersResource = realmResource.users();
+			UserRepresentation newUser = new UserRepresentation();
+			newUser.setUsername(user.getUsername());
+			newUser.setFirstName(user.getFirstName());
+			newUser.setLastName(user.getLastName());
+			newUser.setEmail(user.getEmail());
+			newUser.setEmailVerified(true);
+			newUser.setEnabled(true);
+
+			// Set the user's password
+			CredentialRepresentation passwordCred = KeyCloackUtil.createPasswordCredentials(password);
+			newUser.setCredentials(Collections.singletonList(passwordCred));
+			Response response = usersResource.create(newUser);
+			String kcId = CreatedResponseUtil.getCreatedId(response);
+			if (kcId != null) {
+				user.setKeycloackId(kcId);
+				UserEntity savedUser = userRepository.save(user);
+				if (!userRequest.getGroups().isEmpty()) {
+					UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO = new UserAddUserGroupsRequestDTO();
+					userAddUserGroupsRequestDTO.setUserId(savedUser.getId());
+					userAddUserGroupsRequestDTO.setUserGroupIds(userRequest.getGroups());
+					addUserGroups(userAddUserGroupsRequestDTO, savedUser);
+				} else {
+					// Log the error and continue
+					System.err.println("No groups specified for user: " + userRequest.getUsername());
+				}
+			} else {
+				// Log the error and continue
+				System.err.println("Keycloak ID not generated for user: " + userRequest.getUsername());
+			}
+		} catch (Exception e) {
+			// Log the error and continue
+			System.err.println("Error creating user: " + e.getMessage());
+			e.printStackTrace(); // Print stack trace for debugging
+		}
+		return null;
+	}
+
 	public void loginResetPassword(ResetLoginRequestDTO resetLoginRequestDTO) throws ServiceException {
 
 		resetLoginRequestDTO.setPassword(PasswordUtil.decode(resetLoginRequestDTO.getPassword()));
