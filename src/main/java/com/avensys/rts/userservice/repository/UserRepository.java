@@ -36,6 +36,10 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpec
 
 	@Query(value = "SELECT group FROM UserEntity group WHERE group.isDeleted = ?1")
 	List<UserEntity> findAllAndIsDeleted(boolean isDeleted);
+		
+	@Query(value = "SELECT u from UserEntity u WHERE u.isDeleted = ?1")
+	Page<UserEntity> findAllByIsInDeletedPaginationAndSort(Boolean isDeleted, Pageable pageable);
+
 
 	@Query(value = "SELECT u from UserEntity u WHERE u.isDeleted = ?1 AND u.isActive = ?2")
 	Page<UserEntity> findAllByPaginationAndSort(Boolean isDeleted, Boolean isActive, Pageable pageable);

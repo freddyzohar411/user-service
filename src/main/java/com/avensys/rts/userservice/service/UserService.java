@@ -11,14 +11,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.avensys.rts.userservice.entity.UserGroupEntity;
-import com.avensys.rts.userservice.payload.*;
-import com.avensys.rts.userservice.repository.UserGroupRepository;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -52,7 +51,19 @@ import com.avensys.rts.userservice.api.exception.TokenInvalidException;
 import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
+import com.avensys.rts.userservice.entity.UserGroupEntity;
+import com.avensys.rts.userservice.payload.EmailMultiTemplateRequestDTO;
+import com.avensys.rts.userservice.payload.ForgetResetPasswordRequestDTO;
+import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
+import com.avensys.rts.userservice.payload.LoginDTO;
+import com.avensys.rts.userservice.payload.LoginResponseDTO;
+import com.avensys.rts.userservice.payload.LogoutResponseDTO;
+import com.avensys.rts.userservice.payload.RefreshTokenDTO;
+import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
+import com.avensys.rts.userservice.payload.UserAddUserGroupsRequestDTO;
+import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.repository.ForgetPasswordRepository;
+import com.avensys.rts.userservice.repository.UserGroupRepository;
 import com.avensys.rts.userservice.repository.UserRepository;
 import com.avensys.rts.userservice.util.JwtUtil;
 import com.avensys.rts.userservice.util.KeyCloackUtil;
@@ -79,12 +90,11 @@ public class UserService implements UserDetailsService {
 	@Autowired
 	private UserGroupRepository userGroupRepository;
 
-
 	@Autowired
 	private ForgetPasswordRepository forgetPasswordRepository;
 
 	@Autowired
-	EmailAPIClient emailAPIClient;
+	private EmailAPIClient emailAPIClient;
 
 	@Autowired
 	private KeyCloackUtil keyCloackUtil;
@@ -116,6 +126,10 @@ public class UserService implements UserDetailsService {
 	@Value("${api.application.url}")
 	private String applicationUrl;
 
+	private final Logger log = LoggerFactory.getLogger(UserService.class);
+
+	private final String EMAIL_TEMPLATE = "Email Templates";
+
 	@Override
 	public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
 		UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
@@ -137,7 +151,7 @@ public class UserService implements UserDetailsService {
 	@Transactional
 	public void saveUser(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 
-		 // add check for username exists in a DB
+		// add check for username exists in a DB
 		if (userRepository.existsByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
 					LocaleContextHolder.getLocale()));
@@ -194,6 +208,9 @@ public class UserService implements UserDetailsService {
 		user.setLocation(userRequest.getLocation());
 		user.setDesignation(userRequest.getDesignation());
 
+		// Added by Hx 29022024
+		user.setIsActive(userRequest.getStatus());
+
 		RealmResource realmResource = keyCloackUtil.getRealm();
 		UsersResource usersResource = realmResource.users();
 
@@ -215,6 +232,25 @@ public class UserService implements UserDetailsService {
 			// Save to the database
 			user.setKeycloackId(kcId);
 			UserEntity savedUser = userRepository.save(user);
+
+			// Added by Rahul Sahu to send email
+			try {
+				EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
+				emailMultiTemplateRequestDTO.setTo(new String[] { savedUser.getEmail() });
+				emailMultiTemplateRequestDTO.setSubject("Welcome to Avensys!");
+				emailMultiTemplateRequestDTO.setTemplateName("User Registration");
+				emailMultiTemplateRequestDTO.setCategory(EMAIL_TEMPLATE);
+
+				Map<String, String> templateMap = new HashMap<>();
+				templateMap.put("user.firstName", savedUser.getFirstName());
+				templateMap.put("user.lastName", savedUser.getLastName());
+
+				emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
+				emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
+			} catch (Exception e) {
+				log.error("Error:", e);
+			}
+
 			if (!userRequest.getGroups().isEmpty()) {
 				UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO = new UserAddUserGroupsRequestDTO();
 				userAddUserGroupsRequestDTO.setUserId(savedUser.getId());
@@ -376,7 +412,27 @@ public class UserService implements UserDetailsService {
 			UsersResource usersResource = keyCloackUtil.getRealm().users();
 			usersResource.get(user.getKeycloackId()).update(kcUser);
 			usersResource.get(user.getKeycloackId()).resetPassword(credential);
-			userRepository.save(user);
+			UserEntity savedUser = userRepository.save(user);
+
+			// Added by Rahul Sahu to send email
+			try {
+				EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
+				emailMultiTemplateRequestDTO.setTo(new String[] { savedUser.getEmail() });
+				emailMultiTemplateRequestDTO
+						.setSubject("Congratulations! Your password has been reset successfully.");
+				emailMultiTemplateRequestDTO.setTemplateName("User Password Reset");
+				emailMultiTemplateRequestDTO.setCategory(EMAIL_TEMPLATE);
+
+				Map<String, String> templateMap = new HashMap<>();
+				templateMap.put("user.firstName", savedUser.getFirstName());
+				templateMap.put("user.lastName", savedUser.getLastName());
+
+				emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
+				emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
+			} catch (Exception e) {
+				log.error("Error:", e);
+			}
+
 		} else {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
 					new Object[] { user.getId() }, LocaleContextHolder.getLocale()));
@@ -452,15 +508,40 @@ public class UserService implements UserDetailsService {
 			userById.setEmail(userRequest.getEmail());
 			userById.setMobile(userRequest.getMobile());
 			userById.setUpdatedBy(createdByUserId);
+
+			// Added by Hx 29022024
 			userById.setLocation(userRequest.getLocation());
 			userById.setCountry(userRequest.getCountry());
 			userById.setDesignation(userRequest.getDesignation());
+
+			// Added by Hx 29022024
+			userById.setIsActive(userRequest.getStatus());
 
 			if (userRequest.getEmployeeId() != null) {
 				userById.setEmployeeId(userRequest.getEmployeeId());
 			}
 
-			userRepository.save(userById);
+			UserEntity savedUser = userRepository.save(userById);
+
+			// Added by Rahul Sahu to send email
+			try {
+				EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
+				emailMultiTemplateRequestDTO.setTo(new String[] { savedUser.getEmail() });
+				emailMultiTemplateRequestDTO
+						.setSubject("Congratulations! Your profile has been updated successfully.");
+				emailMultiTemplateRequestDTO.setTemplateName("User Profile Update");
+				emailMultiTemplateRequestDTO.setCategory(EMAIL_TEMPLATE);
+
+				Map<String, String> templateMap = new HashMap<>();
+				templateMap.put("user.firstName", savedUser.getFirstName());
+				templateMap.put("user.lastName", savedUser.getLastName());
+
+				emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
+				emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
+			} catch (Exception e) {
+				log.error("Error:", e);
+			}
+
 		} else {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_PROVIDE_KEYCLOAK_ID,
 					new Object[] { userRequest.getId() }, LocaleContextHolder.getLocale()));
@@ -607,7 +688,8 @@ public class UserService implements UserDetailsService {
 		return user;
 	}
 
-	public Page<UserEntity> getUserListingPage(Integer page, Integer size, String sortBy, String sortDirection) {
+	public Page<UserEntity> getUserListingPage(Integer page, Integer size, String sortBy, String sortDirection,
+			String filterType) {
 		Sort sort = null;
 		if (sortBy != null) {
 			// Get direction based on sort direction
@@ -626,8 +708,18 @@ public class UserService implements UserDetailsService {
 		} else {
 			pageable = PageRequest.of(page, size, sort);
 		}
-		Page<UserEntity> usersPage = userRepository.findAllByPaginationAndSort(false, true, pageable);
-		return usersPage;
+		// new
+		if (filterType.equalsIgnoreCase("deleted")) {
+			Page<UserEntity> usersPage = userRepository.findAllByIsInDeletedPaginationAndSort(true, pageable);
+			return usersPage;
+		} else if (filterType.equalsIgnoreCase("inactive")) {
+			Page<UserEntity> usersPage = userRepository.findAllByPaginationAndSort(false, false, pageable);
+			return usersPage;
+		} else {
+			Page<UserEntity> usersPage = userRepository.findAllByPaginationAndSort(false, true, pageable);
+
+			return usersPage;
+		}
 	}
 
 	public Page<UserEntity> getUserListingPageWithSearch(Integer page, Integer size, String sortBy,
@@ -879,8 +971,9 @@ public class UserService implements UserDetailsService {
 		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
 	}
 
-	public void addUserGroups(UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO, UserEntity savedUser) throws ServiceException {
-		Long updateUserId =  getUserId();
+	public void addUserGroups(UserAddUserGroupsRequestDTO userAddUserGroupsRequestDTO, UserEntity savedUser)
+			throws ServiceException {
+		Long updateUserId = getUserId();
 		if (savedUser != null) {
 			List<Long> userGroups = userAddUserGroupsRequestDTO.getUserGroupIds();
 			userGroups.forEach(id -> {
