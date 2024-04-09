@@ -132,7 +132,7 @@ public class UserService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-		UserEntity user = userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail).orElseThrow(
+		UserEntity user = userRepository.findByUsernameOrEmailIgnoreCase(usernameOrEmail, usernameOrEmail).orElseThrow(
 				() -> new UsernameNotFoundException("User not found with username or email: " + usernameOrEmail));
 
 		Set<GrantedAuthority> authorities = new HashSet<>();
@@ -625,8 +625,8 @@ public class UserService implements UserDetailsService {
 
 		LoginResponseDTO res = response.getBody();
 		// Get userEnitity from repository
-		UserEntity userEntity = userRepository.findByUsernameOrEmail(loginDTO.getUsername(), loginDTO.getUsername())
-				.orElseThrow(
+		UserEntity userEntity = userRepository
+				.findByUsernameOrEmailIgnoreCase(loginDTO.getUsername(), loginDTO.getUsername()).orElseThrow(
 						() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_NOT_FOUND,
 								new Object[] { loginDTO.getUsername() }, LocaleContextHolder.getLocale())));
 		res.setUser(ResponseUtil.mapUserEntitytoResponse(userEntity));
@@ -695,7 +695,7 @@ public class UserService implements UserDetailsService {
 
 	public UserEntity getUserDetail() throws ServiceException {
 		String email = JwtUtil.getEmailFromContext();
-		UserEntity user = userRepository.findByUsernameOrEmail(email, email)
+		UserEntity user = userRepository.findByUsernameOrEmailIgnoreCase(email, email)
 				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
 						null, LocaleContextHolder.getLocale())));
 		return user;
@@ -810,7 +810,7 @@ public class UserService implements UserDetailsService {
 	public Set<UserEntity> getAllUsersUnderManager() throws ServiceException {
 		Set<UserEntity> allUsersUnderManager = new HashSet<>();
 		String email = JwtUtil.getEmailFromContext();
-		UserEntity manager = userRepository.findByUsernameOrEmail(email, email)
+		UserEntity manager = userRepository.findByUsernameOrEmailIgnoreCase(email, email)
 				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
 						null, LocaleContextHolder.getLocale())));
 		if (manager != null) {
@@ -839,7 +839,7 @@ public class UserService implements UserDetailsService {
 	 */
 	public Set<Long> getAllUsersUnderManagerQuery() throws ServiceException {
 		String email = JwtUtil.getEmailFromContext();
-		UserEntity manager = userRepository.findByUsernameOrEmail(email, email)
+		UserEntity manager = userRepository.findByUsernameOrEmailIgnoreCase(email, email)
 				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
 						null, LocaleContextHolder.getLocale())));
 		return userRepository.findUserIdsUnderManager(manager.getId());
@@ -853,7 +853,7 @@ public class UserService implements UserDetailsService {
 	 */
 	public Set<UserEntity> getAllUsersEntityUnderManagerQuery() throws ServiceException {
 		String email = JwtUtil.getEmailFromContext();
-		UserEntity manager = userRepository.findByUsernameOrEmail(email, email)
+		UserEntity manager = userRepository.findByUsernameOrEmailIgnoreCase(email, email)
 				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_EXIST,
 						null, LocaleContextHolder.getLocale())));
 		return userRepository.findUserEntitiesUnderManager(manager.getId());
