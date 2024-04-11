@@ -73,6 +73,29 @@ public class UserController {
 		}
 	}
 
+	@PostMapping("/signin/1FA")
+	public ResponseEntity<?> authenticateUser1FA(@RequestBody LoginDTO loginDTO) {
+
+		String decodedPassword = PasswordUtil.decode(loginDTO.getPassword());
+		loginDTO.setPassword(decodedPassword);
+
+		Authentication authenticate = authenticationManager
+				.authenticate(new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
+		try {
+			if (authenticate.isAuthenticated()) {
+				LoginResponseDTO response = userService.login1FA(loginDTO);
+
+				return new ResponseEntity<>(response, HttpStatus.OK);
+			} else {
+				return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource.getMessage(
+						MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
+			}
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, messageSource
+					.getMessage(MessageConstants.ERROR_USER_EMAIL_NOT_FOUND, null, LocaleContextHolder.getLocale()));
+		}
+	}
+
 	@PostMapping("/refreshToken")
 	public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenDTO refreshTokenDTO) {
 		try {
