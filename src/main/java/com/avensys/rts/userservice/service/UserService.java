@@ -626,7 +626,6 @@ public class UserService implements UserDetailsService {
 		return res;
 	}
 
-//	#New
 	public LoginResponseDTO login1FA(LoginDTO loginDTO) throws ServiceException {
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -721,7 +720,6 @@ public class UserService implements UserDetailsService {
 		emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
 		emailMultiTemplateRequestDTO.setContent("OTP for 2FA is " + otp.getOtpToken());
 		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
-
 	}
 
 	public void resendOTP() throws ServiceException {
