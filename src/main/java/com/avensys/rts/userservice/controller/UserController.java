@@ -96,6 +96,17 @@ public class UserController {
 		}
 	}
 
+	@PostMapping("/signin/2FA")
+	public ResponseEntity<?> authenticateUser2FA(@RequestBody OTPRequestDTO otpRequestDTO) {
+		try {
+			LoginResponseDTO response = userService.login2FA(otpRequestDTO);
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.UNAUTHORIZED, e.getMessage());
+		}
+	}
+
+
 	@PostMapping("/refreshToken")
 	public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenDTO refreshTokenDTO) {
 		try {

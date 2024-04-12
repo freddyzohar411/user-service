@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.avensys.rts.userservice.entity.OTPEnity;
+import com.avensys.rts.userservice.payload.*;
 import com.avensys.rts.userservice.repository.OTPRepository;
 import com.avensys.rts.userservice.util.*;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -55,16 +56,6 @@ import com.avensys.rts.userservice.constants.MessageConstants;
 import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
 import com.avensys.rts.userservice.entity.UserGroupEntity;
-import com.avensys.rts.userservice.payload.EmailMultiTemplateRequestDTO;
-import com.avensys.rts.userservice.payload.ForgetResetPasswordRequestDTO;
-import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
-import com.avensys.rts.userservice.payload.LoginDTO;
-import com.avensys.rts.userservice.payload.LoginResponseDTO;
-import com.avensys.rts.userservice.payload.LogoutResponseDTO;
-import com.avensys.rts.userservice.payload.RefreshTokenDTO;
-import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
-import com.avensys.rts.userservice.payload.UserAddUserGroupsRequestDTO;
-import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.repository.ForgetPasswordRepository;
 import com.avensys.rts.userservice.repository.UserGroupRepository;
 import com.avensys.rts.userservice.repository.UserRepository;
@@ -683,6 +674,46 @@ public class UserService implements UserDetailsService {
 		emailMultiTemplateRequestDTO.setContent("OTP for 2FA is " + otp.getOtpToken());
 		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
 
+		return res;
+	}
+
+	public LoginResponseDTO login2FA(OTPRequestDTO otpRequestDTO) throws ServiceException {
+		UserEntity user = getUserDetail();
+
+		// Get OTP
+		OTPEnity otp = otpRepository.findByUserAndOTPToken(user, otpRequestDTO.getOtp())
+				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_OTP_NOTFOUND, null,
+						LocaleContextHolder.getLocale())));
+
+		if (otp.getExpiryTime().isBefore(LocalDateTime.now())) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_OTP_EXPIRED, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		if (otp.isUsed()) {
+			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_OTP_INVALID, null,
+					LocaleContextHolder.getLocale()));
+		}
+
+		otp.setUsed(true);
+		otpRepository.save(otp);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+		map.add("client_id", clientId);
+		map.add("client_secret", clientSecret);
+		map.add("grant_type", "refresh_token");
+		map.add("refresh_token", otpRequestDTO.getRefreshToken());
+
+		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
+
+		ResponseEntity<LoginResponseDTO> response = restTemplate.postForEntity(tokenUrl, httpEntity,
+				LoginResponseDTO.class);
+
+		LoginResponseDTO res = response.getBody();
+
+		res.setUser(ResponseUtil.mapUserEntitytoResponse(user));
 		return res;
 	}
 
