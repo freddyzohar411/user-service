@@ -652,27 +652,10 @@ public class UserService implements UserDetailsService {
 		res.setUser(ResponseUtil.mapUserEntitytoResponse(userEntity));
 
 		// Create a OTP
-		OTPEnity otp = new OTPEnity();
-		otp.setOtpToken(OTPUtil.generateNumericOtp(6));
-		otp.setExpiryTime(LocalDateTime.now().plusMinutes(2));
-		otp.setUser(userEntity);
-		otp.setUsed(false);
-
-
-		otpRepository.save(otp);
+		OTPEnity otp = createOTP(userEntity, 6, 5);
 
 		// Send email with template
-		EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
-		emailMultiTemplateRequestDTO.setTo(new String[] { userEntity.getEmail() });
-		emailMultiTemplateRequestDTO.setSubject("OTP for 2FA");
-		emailMultiTemplateRequestDTO.setTemplateName("Login OTP Template");
-		emailMultiTemplateRequestDTO.setCategory("Email Templates");
-		emailMultiTemplateRequestDTO.setSubCategory("Login OTP");
-		Map<String, String> templateMap = new HashMap<>();
-		templateMap.put("otpToken", otp.getOtpToken());
-		emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
-		emailMultiTemplateRequestDTO.setContent("OTP for 2FA is " + otp.getOtpToken());
-		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
+		sendOTPEmail(userEntity, otp);
 
 		return res;
 	}
@@ -682,8 +665,8 @@ public class UserService implements UserDetailsService {
 
 		// Get OTP
 		OTPEnity otp = otpRepository.findByUserAndOTPToken(user, otpRequestDTO.getOtp())
-				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_OTP_NOTFOUND, null,
-						LocaleContextHolder.getLocale())));
+				.orElseThrow(() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_OTP_NOTFOUND,
+						null, LocaleContextHolder.getLocale())));
 
 		if (otp.getExpiryTime().isBefore(LocalDateTime.now())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_OTP_EXPIRED, null,
@@ -715,6 +698,36 @@ public class UserService implements UserDetailsService {
 
 		res.setUser(ResponseUtil.mapUserEntitytoResponse(user));
 		return res;
+	}
+
+	private OTPEnity createOTP(UserEntity user, int otpLength, int expiryTimeInMinutes) {
+		OTPEnity otp = new OTPEnity();
+		otp.setOtpToken(OTPUtil.generateNumericOtp(otpLength));
+		otp.setExpiryTime(LocalDateTime.now().plusMinutes(expiryTimeInMinutes));
+		otp.setUser(user);
+		otp.setUsed(false);
+		return otpRepository.save(otp);
+	}
+
+	private void sendOTPEmail(UserEntity user, OTPEnity otp) {
+		EmailMultiTemplateRequestDTO emailMultiTemplateRequestDTO = new EmailMultiTemplateRequestDTO();
+		emailMultiTemplateRequestDTO.setTo(new String[] { user.getEmail() });
+		emailMultiTemplateRequestDTO.setSubject("OTP for 2FA");
+		emailMultiTemplateRequestDTO.setTemplateName("Login OTP Template");
+		emailMultiTemplateRequestDTO.setCategory("Email Templates");
+		emailMultiTemplateRequestDTO.setSubCategory("Login OTP");
+		Map<String, String> templateMap = new HashMap<>();
+		templateMap.put("LOGIN_OTP_TOKEN", otp.getOtpToken());
+		emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
+		emailMultiTemplateRequestDTO.setContent("OTP for 2FA is " + otp.getOtpToken());
+		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
+
+	}
+
+	public void resendOTP() throws ServiceException {
+		UserEntity user = getUserDetail();
+		OTPEnity otp = createOTP(user, 6, 5);
+		sendOTPEmail(user, otp);
 	}
 
 	public LoginResponseDTO refreshToken(RefreshTokenDTO refreshTokenDTO) throws ServiceException {

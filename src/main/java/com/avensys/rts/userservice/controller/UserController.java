@@ -106,6 +106,16 @@ public class UserController {
 		}
 	}
 
+	@GetMapping("/signin/resendOTP")
+	public ResponseEntity<?> resendOTP() {
+		try {
+			userService.resendOTP();
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.OK, messageSource
+					.getMessage(MessageConstants.OTP_SENT_SUCCESSFULLY, null, LocaleContextHolder.getLocale()));
+		} catch (ServiceException e) {
+			return ResponseUtil.generateErrorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+		}
+	}
 
 	@PostMapping("/refreshToken")
 	public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenDTO refreshTokenDTO) {
@@ -135,7 +145,7 @@ public class UserController {
 
 	@PostMapping("/add/massImport")
 	public ResponseEntity<?> createUsers(@RequestBody List<UserRequestDTO> users,
-										 @RequestHeader(name = "Authorization") String token) {
+			@RequestHeader(name = "Authorization") String token) {
 		try {
 			Long userId = jwtUtil.getUserId(token);
 			System.out.println("User ID: " + userId);
@@ -146,7 +156,6 @@ public class UserController {
 			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, e.getMessage());
 		}
 	}
-
 
 	/**
 	 * @author Rahul Sahu
