@@ -12,4 +12,5 @@ import lombok.Setter;
 public class LoginDTO {
 	private String username;
 	private String password;
+	private Boolean is2FAEnabled=true;
 }

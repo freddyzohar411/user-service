@@ -623,38 +623,14 @@ public class UserService implements UserDetailsService {
 						() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_NOT_FOUND,
 								new Object[] { loginDTO.getUsername() }, LocaleContextHolder.getLocale())));
 		res.setUser(ResponseUtil.mapUserEntitytoResponse(userEntity));
-		return res;
-	}
 
-	public LoginResponseDTO login1FA(LoginDTO loginDTO) throws ServiceException {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+		if (loginDTO.getIs2FAEnabled()) {
+			// Create a OTP
+			OTPEnity otp = createOTP(userEntity, 6, 5);
 
-		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-		map.add("client_id", clientId);
-		map.add("client_secret", clientSecret);
-		map.add("grant_type", grantType);
-		map.add("username", loginDTO.getUsername());
-		map.add("password", loginDTO.getPassword());
-
-		HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(map, headers);
-
-		ResponseEntity<LoginResponseDTO> response = restTemplate.postForEntity(tokenUrl, httpEntity,
-				LoginResponseDTO.class);
-
-		LoginResponseDTO res = response.getBody();
-		// Get userEnitity from repository
-		UserEntity userEntity = userRepository
-				.findByUsernameOrEmailIgnoreCase(loginDTO.getUsername(), loginDTO.getUsername()).orElseThrow(
-						() -> new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_NOT_FOUND,
-								new Object[] { loginDTO.getUsername() }, LocaleContextHolder.getLocale())));
-		res.setUser(ResponseUtil.mapUserEntitytoResponse(userEntity));
-
-		// Create a OTP
-		OTPEnity otp = createOTP(userEntity, 6, 5);
-
-		// Send email with template
-		sendOTPEmail(userEntity, otp);
+			// Send email with template
+			sendOTPEmail(userEntity, otp);
+		}
 
 		return res;
 	}
