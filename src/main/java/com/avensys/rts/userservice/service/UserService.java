@@ -627,7 +627,6 @@ public class UserService implements UserDetailsService {
 		if (loginDTO.getIs2FAEnabled()) {
 			// Create a OTP
 			OTPEnity otp = createOTP(userEntity, 6, 5);
-
 			// Send email with template
 			sendOTPEmail(userEntity, otp);
 		}

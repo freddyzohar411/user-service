@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 public interface OTPRepository extends JpaRepository<OTPEnity, Long> {
-
 	@Query("SELECT otp FROM otp otp WHERE otp.user = :user AND otp.otpToken = :otpToken")
 	Optional<OTPEnity> findByUserAndOTPToken(UserEntity user, String otpToken);
-
 }

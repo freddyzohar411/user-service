@@ -73,6 +73,11 @@ public class UserController {
 		}
 	}
 
+	/**
+	 * @description Authenticate user with 2FA
+	 * @param otpRequestDTO
+	 * @return
+	 */
 	@PostMapping("/signin/2FA")
 	public ResponseEntity<?> authenticateUser2FA(@RequestBody OTPRequestDTO otpRequestDTO) {
 		try {
