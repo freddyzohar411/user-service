@@ -23,6 +23,12 @@ public class MessageConstants {
 	public static final String ERROR_OPERATION = "error.operation";
 	public static final String ERROR_OLD_PASSWORD = "error.oldnewpassword";
 
+	public static final String ERROR_OTP_NOTFOUND = "error.otp.notfound";
+	public static final String ERROR_OTP_EXPIRED = "error.otp.expired";
+	public static final String ERROR_OTP_INVALID = "error.otp.invalid";
+
+	public static final String OTP_SENT_SUCCESSFULLY = "otp.sent.successfully";
+
 
 	public static final String USER_FORGET_EMAIL_NOT_SENT = "user.forget.email.sent";
 	public static final String ERROR_USER_FORGET_EMAIL_SENT = "error.user.forget.email.sent";
