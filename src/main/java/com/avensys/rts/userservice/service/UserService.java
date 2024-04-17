@@ -73,7 +73,11 @@ import com.avensys.rts.userservice.util.ResponseUtil;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.ws.rs.core.Response;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Transactional
 @Service
 public class UserService implements UserDetailsService {
@@ -122,6 +126,11 @@ public class UserService implements UserDetailsService {
 
 	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.authorization-grant-type}")
 	private String grantType;
+	
+	public UserService(UserRepository userRepository) {
+		this.userRepository = userRepository;
+		
+	}
 
 	@Value("${api.application.url}")
 	private String applicationUrl;
