@@ -270,19 +270,19 @@ public class UserService implements UserDetailsService {
 
 	public UserEntity createUserFromRequest(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 		// add check for username exists in a DB
-		if (userRepository.existsByUsername(userRequest.getUsername())) {
+		if (userRepository.existsByUsername(userRequest.getUsername()) && !userRepository.findIsDeletedByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
 		// add check for email exists in DB
-		if (userRepository.existsByEmail(userRequest.getEmail())) {
+		if (userRepository.existsByEmail(userRequest.getEmail()) && !userRepository.findIsDeletedByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
 		// add check for email exists in DB
-		if (userRequest.getEmployeeId() != null && userRepository.existsByEmployeeId(userRequest.getEmployeeId())) {
+		if (userRequest.getEmployeeId() != null && userRepository.existsByEmployeeId(userRequest.getEmployeeId()) && !userRepository.findIsDeletedByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
