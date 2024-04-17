@@ -52,4 +52,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long>, JpaSpec
 			+ "SELECT u.* FROM users u JOIN UserHierarchy h ON u.manager = h.id) "
 			+ "SELECT * FROM UserHierarchy WHERE id IS NOT NULL", nativeQuery = true)
 	Set<UserEntity> findUserEntitiesUnderManager(@Param("userId") Long userId);
+
+	@Query(value = "SELECT u.isDeleted FROM UserEntity u WHERE u.username = :username")
+	Boolean findIsDeletedByUsername(@Param("username") String username);
+
 }
