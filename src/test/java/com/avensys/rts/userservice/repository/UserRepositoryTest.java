@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +34,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.annotation.Rollback;
 
+import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
 import com.avensys.rts.userservice.entity.UserGroupEntity;
 
@@ -62,6 +64,7 @@ public class UserRepositoryTest {
 	Specification<UserEntity> specification;
 	Page<UserEntity> userPage;
 	Page<UserEntity> userPageAsc;
+	List<ForgetPasswordEntity> forgetPassword = new ArrayList<>();
 	Set<Long> ids;
 	Sort sortDec = null;
 	Sort sortAsc = null;
@@ -72,11 +75,11 @@ public class UserRepositoryTest {
 		userEntity = new UserEntity(1L, "339f35a7-0d3d-431e-9a63-d90d4c342e4a", "Kotaiah", "Nalleboina",
 				"kittu1@aven-sys.com", "kittu1@aven-sys.com",
 				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", false, true,
-				groupEntities, users, manager);
+				groupEntities, users, manager,true,forgetPassword,"india","AP","Developer");
 		userEntity1 = new UserEntity(2L, "339f35a7-0d3d-431e-9a63-d90d4c342e4a", "Kittu", "Nalleb",
 				"kittu1@aven-sys.com", "kittu1@aven-sys.com",
 				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", false, true,
-				groupEntities, users, manager);
+				groupEntities, users, manager,true,forgetPassword,"india","AP","Developer");
 		entityOptional = Optional.of(userEntity);
 		userList = Arrays.asList(userEntity, userEntity1);
 		sortDec = Sort.by(Sort.Direction.DESC, "updatedAt");

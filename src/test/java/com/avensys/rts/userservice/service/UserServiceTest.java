@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +45,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.constants.MessageConstants;
+import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
 import com.avensys.rts.userservice.entity.UserEntity;
 import com.avensys.rts.userservice.entity.UserGroupEntity;
 import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
@@ -91,8 +93,10 @@ public class UserServiceTest {
 	LoginDTO loginDTO;
 	AutoCloseable autoCloseable;
 	Set<UserEntity> users;
+	List<Long> groups;
 	UserEntity manager;
 	Pageable pageable = null;
+	List<ForgetPasswordEntity> forgetPassword = new ArrayList<>();
 	Pageable pageableAsc = null;
 	UserEntity userEntity;
 	UserEntity userEntity1;
@@ -119,15 +123,15 @@ public class UserServiceTest {
 		userEntity = new UserEntity(1L, "339f35a7-0d3d-431e-9a63-d90d4c342e4a", "Kotaiah", "Nalleb",
 				"kittu1@aven-sys.com", "kittu1@aven-sys.com",
 				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", false, true,
-				groupEntities, users, manager);
+				groupEntities, users, manager,true,forgetPassword,"india","AP","Developer");
 		userEntity1 = new UserEntity(2L, "339f35a7-0d3d-431e-9a63-d90d4c342e4a", "Kittu", "Nallebeboina",
 				"kittu1@aven-sys.com", "kittu1@aven-sys.com",
 				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", false, true,
-				groupEntities, users, manager);
+				groupEntities, users, manager,true,forgetPassword,"india","AP","Developer");
 		userRequestDTO = new UserRequestDTO(1L, "Kotaiah", "Nalleb", "kittu1@aven-sys.com", "kittu1@aven-sys.com",
-				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", 1L);
+				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", 1L,"AP","india","developer",groups,true);
 		userRequestDTO1 = new UserRequestDTO(2L, "Kotaiah", "Nalleb", "kittu1@aven-sys.com", "kittu1@aven-sys.com",
-				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", 1L);
+				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", 1L,"AP","india","developer",groups,true);
 		userRepository.save(userEntity);
 		dbUser = Optional.of(userEntity);
 		userList = Arrays.asList(userEntity, userEntity1);
@@ -338,7 +342,7 @@ public class UserServiceTest {
 		mock(MessageSource.class);
 		mock(UserEntity.class);
 		when(userRepository.findAllByPaginationAndSort(false, true, pageable)).thenReturn(usersPage);
-		when(userService.getUserListingPage(1, 2, "updatedAt", "DEFAULT_DIRECTION")).thenReturn(usersPage);
+		when(userService.getUserListingPage(1, 2, "updatedAt", "DEFAULT_DIRECTION","filterType")).thenReturn(usersPage);
 		assertNotNull(usersPage);
 	}
 
