@@ -119,7 +119,7 @@ public class UserRepositoryTest {
 	@Rollback(value = false)
 	public void testFindByUsernameOrEmail() {
 		mock(UserRepository.class);
-		when(userRepository.findByUsernameOrEmail("Kotaiah", "kittu1@aven-sys.com")).thenReturn(entityOptional);
+		when(userRepository.findByUsernameOrEmailIgnoreCase("Kotaiah", "kittu1@aven-sys.com")).thenReturn(entityOptional);
 		assertNotNull(entityOptional);
 	}
 

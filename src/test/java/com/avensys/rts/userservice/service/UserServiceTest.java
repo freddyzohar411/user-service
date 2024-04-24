@@ -141,7 +141,7 @@ public class UserServiceTest {
 		pageable = PageRequest.of(1, 2, sortDec);
 		userPageAsc = new PageImpl<UserEntity>(userList, pageableAsc, 2);
 		usersPage = new PageImpl<UserEntity>(userList, pageable, 2);
-		loginDTO = new LoginDTO("kittu1@aven-sys.com", "pass1234");
+		loginDTO = new LoginDTO("kittu1@aven-sys.com", "Y0dGIhsgemN6RXlNelE9",true);
 		ids = new HashSet<Long>();
 		ids.add(2L);
 		ids.add(3L);
@@ -294,7 +294,7 @@ public class UserServiceTest {
 		mock(HttpHeaders.class);
 		when(restTemplate.postForEntity("http://localhost:8080/realms/rtsrealm/protocol/openid-connect/token",
 				httpEntity, LoginResponseDTO.class)).thenReturn(UserResponse);
-		when(userRepository.findByUsernameOrEmail(loginDTO.getUsername(), loginDTO.getUsername())).thenReturn(dbUser);
+		when(userRepository.findByUsernameOrEmailIgnoreCase(loginDTO.getUsername(), loginDTO.getUsername())).thenReturn(dbUser);
 		assertNotNull(dbUser);
 
 	}
@@ -309,7 +309,7 @@ public class UserServiceTest {
 	@Test
 	void testGetAllUsersUnderManagerQuery()throws Exception {
 		when(JwtUtil.getEmailFromContext()).thenReturn("kittu1@aven-sys.com");
-		when(userRepository.findByUsernameOrEmail("Kotaiah", "kittu1@aven-sys.com")).thenReturn(dbUser);
+		when(userRepository.findByUsernameOrEmailIgnoreCase("Kotaiah", "kittu1@aven-sys.com")).thenReturn(dbUser);
 		assertNotNull(dbUser);
 		//when(userService.getAllUsersUnderManager()).thenReturn(users);
 		//when(userRepository.findUserIdsUnderManager(userEntity.getId())).thenReturn(ids);
@@ -318,7 +318,7 @@ public class UserServiceTest {
 	@Test
 	void testGetAllUsersUnderManager(){
 		when(JwtUtil.getEmailFromContext()).thenReturn("kittu1@aven-sys.com");
-		when(userRepository.findByUsernameOrEmail("kittu1@aven-sys.com", "kittu1@aven-sys.com")).thenReturn(dbUser);
+		when(userRepository.findByUsernameOrEmailIgnoreCase("kittu1@aven-sys.com", "kittu1@aven-sys.com")).thenReturn(dbUser);
 		when(userRepository.findUserIdsUnderManager(userEntity.getId())).thenReturn(ids);
 		assertNotNull(ids);
 	}
@@ -349,7 +349,7 @@ public class UserServiceTest {
 	@Test
 	void testGetUserDetail() {
 		when(JwtUtil.getEmailFromContext()).thenReturn("kittu1@aven-sys.com");
-		when(userRepository.findByUsernameOrEmail("kittu1@aven-sys.com", "kittu1@aven-sys.com")).thenReturn(dbUser);
+		when(userRepository.findByUsernameOrEmailIgnoreCase("kittu1@aven-sys.com", "kittu1@aven-sys.com")).thenReturn(dbUser);
 		assertNotNull(dbUser);
 	}
 
