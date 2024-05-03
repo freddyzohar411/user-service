@@ -330,4 +330,15 @@ public class UserController {
 		}
 	}
 
+	@PostMapping("/activity/add")
+	public ResponseEntity<?> addActivity(@RequestBody AuditRequestDTO auditRequestDTO) {
+		try {
+			userService.addActivity(auditRequestDTO);
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.CREATED,
+					messageSource.getMessage(MessageConstants.USER_ACTIVITY_CREATED, null, LocaleContextHolder.getLocale()));
+		} catch (ServiceException e) {
+			return ResponseUtil.generateSuccessResponse(null, HttpStatus.BAD_REQUEST, e.getMessage());
+		}
+	}
+
 }

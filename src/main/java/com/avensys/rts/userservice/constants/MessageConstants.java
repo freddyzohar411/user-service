@@ -10,6 +10,8 @@ public class MessageConstants {
 	public static final String USER_LOGIN_SUCCESS = "user.login.success";
 	public static final String USER_LOGOUT_SUCCESS = "user.logout.success";
 
+	public static final String USER_ACTIVITY_CREATED = "user.activity.created";
+
 	public static final String ERROR_PROVIDE_ID = "error.provide.id";
 	public static final String ERROR_PROVIDE_KEYCLOAK_ID = "error.provide.keycloack.id";
 	public static final String ERROR_USER_NOT_EXIST = "error.usernotexist";
