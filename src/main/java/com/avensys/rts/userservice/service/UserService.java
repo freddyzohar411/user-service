@@ -693,7 +693,7 @@ public class UserService implements UserDetailsService {
 		Map<String, String> templateMap = new HashMap<>();
 		templateMap.put("LOGIN_OTP_TOKEN", otp.getOtpToken());
 		emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
-		emailMultiTemplateRequestDTO.setContent("OTP for 2FA is " + otp.getOtpToken());
+		emailMultiTemplateRequestDTO.setContent("OTP 2FA code is " + otp.getOtpToken());
 		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
 	}
 
