@@ -1082,8 +1082,8 @@ public class UserService implements UserDetailsService {
 	}
 
 	public void addActivity(AuditRequestDTO auditRequestDTO) throws ServiceException {
-		UserEntity user = userRepository.findById(getUserId()).orElseThrow(() -> new ServiceException(
-				messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, null, LocaleContextHolder.getLocale())));
+		UserEntity user = userRepository.findById(getUserId()).orElseThrow(() -> new ServiceException(messageSource
+				.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, null, LocaleContextHolder.getLocale())));
 
 		ActivityEntity activityEntity = mapActivityRequestDTOToEntity(auditRequestDTO, user);
 		activityRepository.save(activityEntity);
@@ -1104,6 +1104,10 @@ public class UserService implements UserDetailsService {
 		activityEntity.setAuditData(auditRequestDTO.getAuditData());
 		activityEntity.setCreatedBy(user.getId());
 		return activityEntity;
+	}
+
+	public List<UserEntity> getUserListByIds(UserListRequestDTO userListRequestDTO) {
+		return userRepository.findUserInIdsAndIsDeletedAndIsActive(userListRequestDTO.getUserIds(), false, true);
 	}
 
 	private Long getUserId() {

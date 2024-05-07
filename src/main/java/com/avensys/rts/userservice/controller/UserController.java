@@ -341,4 +341,12 @@ public class UserController {
 		}
 	}
 
+	@PostMapping("/find-by-ids")
+	public ResponseEntity<?> getUserListByIds(@RequestBody UserListRequestDTO userListRequestDTO) {
+		List<UserEntity> users = userService.getUserListByIds(userListRequestDTO);
+		return ResponseUtil.generateSuccessResponse(ResponseUtil.mapUserEntityListtoResponse(users), HttpStatus.OK,
+				null);
+
+	}
+
 }
