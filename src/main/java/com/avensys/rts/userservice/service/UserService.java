@@ -11,9 +11,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.avensys.rts.userservice.entity.OTPEnity;
+import com.avensys.rts.userservice.entity.*;
 import com.avensys.rts.userservice.payload.*;
-import com.avensys.rts.userservice.repository.OTPRepository;
+import com.avensys.rts.userservice.repository.*;
 import com.avensys.rts.userservice.util.*;
 import org.keycloak.admin.client.CreatedResponseUtil;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -53,12 +53,6 @@ import com.avensys.rts.userservice.api.exception.PasswordMismatchException;
 import com.avensys.rts.userservice.api.exception.ServiceException;
 import com.avensys.rts.userservice.api.exception.TokenInvalidException;
 import com.avensys.rts.userservice.constants.MessageConstants;
-import com.avensys.rts.userservice.entity.ForgetPasswordEntity;
-import com.avensys.rts.userservice.entity.UserEntity;
-import com.avensys.rts.userservice.entity.UserGroupEntity;
-import com.avensys.rts.userservice.repository.ForgetPasswordRepository;
-import com.avensys.rts.userservice.repository.UserGroupRepository;
-import com.avensys.rts.userservice.repository.UserRepository;
 
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -89,6 +83,9 @@ public class UserService implements UserDetailsService {
 
 	@Autowired
 	private OTPRepository otpRepository;
+
+	@Autowired
+	private ActivityRepository activityRepository;
 
 	@Autowired
 	private EmailAPIClient emailAPIClient;
@@ -702,7 +699,7 @@ public class UserService implements UserDetailsService {
 		Map<String, String> templateMap = new HashMap<>();
 		templateMap.put("LOGIN_OTP_TOKEN", otp.getOtpToken());
 		emailMultiTemplateRequestDTO.setTemplateMap(templateMap);
-		emailMultiTemplateRequestDTO.setContent("OTP for 2FA is " + otp.getOtpToken());
+		emailMultiTemplateRequestDTO.setContent("OTP 2FA code is " + otp.getOtpToken());
 		emailAPIClient.sendEmailServiceTemplate(emailMultiTemplateRequestDTO);
 	}
 
@@ -1091,6 +1088,35 @@ public class UserService implements UserDetailsService {
 				}
 			});
 		}
+	}
+
+	public void addActivity(AuditRequestDTO auditRequestDTO) throws ServiceException {
+		UserEntity user = userRepository.findById(getUserId()).orElseThrow(() -> new ServiceException(messageSource
+				.getMessage(MessageConstants.ERROR_USER_NOT_FOUND, null, LocaleContextHolder.getLocale())));
+
+		ActivityEntity activityEntity = mapActivityRequestDTOToEntity(auditRequestDTO, user);
+		activityRepository.save(activityEntity);
+	}
+
+	private ActivityEntity mapActivityRequestDTOToEntity(AuditRequestDTO auditRequestDTO, UserEntity user) {
+		ActivityEntity activityEntity = new ActivityEntity();
+		activityEntity.setUser(user);
+		activityEntity.setModule(auditRequestDTO.getModule());
+		activityEntity.setSubModule(auditRequestDTO.getSubModule());
+		activityEntity.setModuleId(auditRequestDTO.getModuleId());
+		activityEntity.setAction(auditRequestDTO.getAction());
+
+		activityEntity.setRecruiterId(auditRequestDTO.getRecruiterId());
+		activityEntity.setCandidateId(auditRequestDTO.getCandidateId());
+		activityEntity.setSalesId(auditRequestDTO.getSalesId());
+
+		activityEntity.setAuditData(auditRequestDTO.getAuditData());
+		activityEntity.setCreatedBy(user.getId());
+		return activityEntity;
+	}
+
+	public List<UserEntity> getUserListByIds(UserListRequestDTO userListRequestDTO) {
+		return userRepository.findUserInIdsAndIsDeletedAndIsActive(userListRequestDTO.getUserIds(), false, true);
 	}
 
 	private Long getUserId() {
