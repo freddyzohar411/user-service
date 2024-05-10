@@ -12,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-
 import com.avensys.rts.userservice.entity.ModuleEntity;
 import com.avensys.rts.userservice.entity.PermissionEntity;
 import com.avensys.rts.userservice.entity.RoleEntity;
@@ -32,7 +31,7 @@ public class ResponseUtil {
 
 	@Autowired
 	public void setSomeThing(PermissionRepository permissionRepository) {
-		ResponseUtil.permissionRepository = permissionRepository;
+		ResponseUtil.setPermissionRepository(permissionRepository);
 	}
 
 	public static ResponseEntity<Object> generateSuccessResponse(Object dataObject, HttpStatus httpStatus,
@@ -204,6 +203,10 @@ public class ResponseUtil {
 			});
 		}
 		return ids;
+	}
+	
+	public static void setPermissionRepository(PermissionRepository permissionRepository) {
+		ResponseUtil.permissionRepository = permissionRepository;
 	}
 
 }

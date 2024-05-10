@@ -57,7 +57,11 @@ import com.avensys.rts.userservice.constants.MessageConstants;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.ws.rs.core.Response;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Transactional
 @Service
 public class UserService implements UserDetailsService {
@@ -112,6 +116,11 @@ public class UserService implements UserDetailsService {
 
 	@Value("${spring.security.oauth2.client.registration.oauth2-client-credentials.authorization-grant-type}")
 	private String grantType;
+	
+	public UserService(UserRepository userRepository) {
+		this.userRepository = userRepository;
+		
+	}
 
 	@Value("${api.application.url}")
 	private String applicationUrl;
@@ -267,19 +276,19 @@ public class UserService implements UserDetailsService {
 
 	public UserEntity createUserFromRequest(UserRequestDTO userRequest, Long createdByUserId) throws ServiceException {
 		// add check for username exists in a DB
-		if (userRepository.existsByUsername(userRequest.getUsername())) {
+		if (userRepository.existsByUsername(userRequest.getUsername()) && !userRepository.findIsDeletedByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USERNAME_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
 		// add check for email exists in DB
-		if (userRepository.existsByEmail(userRequest.getEmail())) {
+		if (userRepository.existsByEmail(userRequest.getEmail()) && !userRepository.findIsDeletedByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMAIL_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
 
 		// add check for email exists in DB
-		if (userRequest.getEmployeeId() != null && userRepository.existsByEmployeeId(userRequest.getEmployeeId())) {
+		if (userRequest.getEmployeeId() != null && userRepository.existsByEmployeeId(userRequest.getEmployeeId()) && !userRepository.findIsDeletedByUsername(userRequest.getUsername())) {
 			throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_EMPLOYEE_ID_TAKEN, null,
 					LocaleContextHolder.getLocale()));
 		}
