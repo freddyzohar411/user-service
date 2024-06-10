@@ -23,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.MediaType;
@@ -48,6 +47,8 @@ import com.avensys.rts.userservice.payload.InstrospectResponseDTO;
 import com.avensys.rts.userservice.payload.LoginDTO;
 import com.avensys.rts.userservice.payload.LoginResponseDTO;
 import com.avensys.rts.userservice.payload.LogoutResponseDTO;
+import com.avensys.rts.userservice.payload.OTPRequestDTO;
+import com.avensys.rts.userservice.payload.ResetLoginRequestDTO;
 import com.avensys.rts.userservice.payload.UserRequestDTO;
 import com.avensys.rts.userservice.payload.response.ModuleResponseDTO;
 import com.avensys.rts.userservice.payload.response.RoleResponseDTO;
@@ -83,7 +84,7 @@ public class UserControllerTest {
 
 	@Mock
 	UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken;
-	
+
 	@Mock
 	Authentication authentication;
 
@@ -134,6 +135,10 @@ public class UserControllerTest {
 	List<Long> groups;
 	List<ForgetPasswordEntity> forgetPassword = new ArrayList<>();
 
+	OTPRequestDTO oTPRequestDTO;
+	
+	ResetLoginRequestDTO resetLoginRequestDTO;
+
 	@Mock
 	AutoCloseable autoCloseable;
 
@@ -159,10 +164,13 @@ public class UserControllerTest {
 		logoutResponseDTO.setMessage("Logout successfull");
 		instrospectResponseDTO = new InstrospectResponseDTO();
 		instrospectResponseDTO.setActive(true);
+		oTPRequestDTO = new OTPRequestDTO("otp", "refreshToken");
+		resetLoginRequestDTO = new ResetLoginRequestDTO(1L,"password","confirmPassword");
 		userRequestDTO = new UserRequestDTO(1L, "Kotai", "Nalleb", "kittu1@aven-sys.com", "kittu1@aven-sys.com",
-				"Y0dGIhsgemN6RXlNelE9", "9381515362", "234", 1L,"AP","india","developer",groups,true);
+				"Y0dGIhsgemN6RXlNelE9", "9381515362", "234", 1L, "AP", "india", "developer", groups, true);
 		userRequestDTO1 = new UserRequestDTO(1L, "Kotai", "Nalleb", "kittu1@aven-sys.com", "kittu1@aven-sys.com",
-				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", 1L,"AP","india","developer",groups,true);
+				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", 1L, "AP", "india",
+				"developer", groups, true);
 		moduleEntity = new ModuleEntity(1L, "Accounts", "Accounts module .", modulePermissions);
 		roleModulePermissionsEntity = new RoleModulePermissionsEntity(1L, moduleEntity, roleEntity, "permissions");
 		roleModulePermissionsEntity1 = new RoleModulePermissionsEntity(2L, moduleEntity, roleEntity, "permissions");
@@ -177,11 +185,11 @@ public class UserControllerTest {
 		userEntity = new UserEntity(1L, "339f35a7-0d3d-431e-9a63-d90d4c342e4a", "Kotai", "Nalleb",
 				"kittu1@aven-sys.com", "kittu1@aven-sys.com",
 				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", false, true,
-				groupEntities, users, manager,true,forgetPassword,"india","AP","Developer");
+				groupEntities, users, manager, true, forgetPassword, "india", "AP", "Developer");
 		userEntity1 = new UserEntity(2L, "339f35a7-0d3d-431e-9a63-d90d4c342e4a", "Kotaiah", "Nalleb",
 				"kittu1@aven-sys.com", "kittu1@aven-sys.com",
 				"$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362", "234", false, true,
-				groupEntities, users, manager,true,forgetPassword,"india","AP","Developer");
+				groupEntities, users, manager, true, forgetPassword, "india", "AP", "Developer");
 		user = Optional.of(userEntity);
 		permissionsList1 = Arrays.asList("Read", "Write", "Edit", "Delete");
 		moduleResponseDTO = new ModuleResponseDTO(1L, "Hi", permissionsList1);
@@ -199,7 +207,7 @@ public class UserControllerTest {
 		 * "kittu1@aven-sys.com", "kittu1@aven-sys.com", "9381515362", "234", false,
 		 * true, userGroup, 1L, localeDate, Manager,"AP","india","Developer",true);
 		 */
-		loginDTO = new LoginDTO("kittu1@aven-sys.com", "Y0dGIhsgemN6RXlNelE9",true);
+		loginDTO = new LoginDTO("kittu1@aven-sys.com", "Y0dGIhsgemN6RXlNelE9", true);
 		loginResponseDTO = new LoginResponseDTO();
 		usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(loginDTO.getUsername(),
 				loginDTO.getPassword());
@@ -209,7 +217,6 @@ public class UserControllerTest {
 				new Object[] { 1 }, LocaleContextHolder.getLocale()));
 		this.mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
 	}
-	
 
 	/**
 	 * This tearDown method is used to cleanup the object initialization and other
@@ -268,7 +275,7 @@ public class UserControllerTest {
 		RequestBuilder request = MockMvcRequestBuilders.post("/api/user/signup")
 				.content(asJsonString(new UserRequestDTO(1L, "Kotai", "Nalleb", "kittu1@aven-sys.com",
 						"kittu1@aven-sys.com", "$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO",
-						"9381515362", "234", 1L,"AP","india","developer",groups,true)))
+						"9381515362", "234", 1L, "AP", "india", "developer", groups, true)))
 				.contentType(MediaType.APPLICATION_JSON_VALUE).accept(MediaType.APPLICATION_JSON);
 		mockMvc.perform(request).andExpect(status().isCreated());
 	}
@@ -279,7 +286,7 @@ public class UserControllerTest {
 		mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
 		UserRequestDTO userRequestDTO = new UserRequestDTO(1L, "Kotai", "Nalleb", "kittu1@aven-sys.com",
 				"kittu1@aven-sys.com", "$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO", "9381515362",
-				"234", 1L,"AP","india","developer",groups,true);
+				"234", 1L, "AP", "india", "developer", groups, true);
 		assertNotNull(userRequestDTO.getUsername());
 		UserRequestDTO userRequestDTO2 = new UserRequestDTO();
 		userRequestDTO2.setLastName("nalleboina");
@@ -332,8 +339,8 @@ public class UserControllerTest {
 		mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
 		RequestBuilder request = MockMvcRequestBuilders.post("/api/user/add")
 				.content(asJsonString(new UserRequestDTO(1L, "Kotai", "Nalleb", "kittu1@aven-sys.com",
-						"kittu1@aven-sys.com", "Y0dGIhsgemN6RXlNelE9",
-						"9381515362", "234", 1L,"AP","india","developer",groups,true)))
+						"kittu1@aven-sys.com", "Y0dGIhsgemN6RXlNelE9", "9381515362", "234", 1L, "AP", "india",
+						"developer", groups, true)))
 				.header("Authorization",
 						"Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI0WndUaGhXVUtGSjhUdE1NdFZrcm1Edk9TdGdRcS1Sa3MwUnEwRE5IRG5jIn0.eyJleHAiOjE3MDMyMzI3MTQsImlhdCI6MTcwMzIzMjQxNCwianRpIjoiNmMwYjBlMmYtMDZmYi00YzU3LWJmMWQtM2MzNmEzZGUxOGQxIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9ydHNyZWFsbSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiIzMzlmMzVhNy0wZDNkLTQzMWUtOWE2My1kOTBkNGMzNDJlNGEiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJydHNjbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiMzExMDI3MDYtYmJmZS00MGJjLWE4YmMtMDEzYTgzYzIzMTVlIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwczovL3d3dy5rZXljbG9hay5vcmciXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwidW1hX2F1dGhvcml6YXRpb24iLCJkZWZhdWx0LXJvbGVzLXJ0c3JlYWxtIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwic2lkIjoiMzExMDI3MDYtYmJmZS00MGJjLWE4YmMtMDEzYTgzYzIzMTVlIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJLb3RhaSBOYWxsZWIiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJraXR0dTFAYXZlbi1zeXMuY29tIiwiZ2l2ZW5fbmFtZSI6IktvdGFpIiwiZmFtaWx5X25hbWUiOiJOYWxsZWIiLCJlbWFpbCI6ImtpdHR1MUBhdmVuLXN5cy5jb20ifQ.A314CP_nu6x3qENsK8fyZP8SXXJO9y1nAcUXHU2FRRZ2vtPjD-T6rUoHQ_CZgMXnPg4Rl4MOlSCQ5leTiWix9kfBYkDQGar7GPSf9UnnPai7adiLV8Rb6OUYykHPjN_Wy3A0CVyGbsBB1ow7uhmgPkM7aMBUUYikkYK0aLremKn9vXJCpC7G2UTCW_BOjl7Bb5atic3J328ieN8nu0_W_Zd61ux1zm7skX4TPLNTC-4dAc16O-6IOo6JChQLUublfm-CcVC_i7oIv0Nuw7hOj5m5_e0klNcK-dw9bArBkRCGU9Sr4ieFIkjaLxt22Z3ZDg0C9SeB268OvnKXrjDKiQ")
 				.contentType(MediaType.APPLICATION_JSON_VALUE).accept(MediaType.APPLICATION_JSON);
@@ -347,7 +354,7 @@ public class UserControllerTest {
 		RequestBuilder request = MockMvcRequestBuilders.post("/api/user/add")
 				.content(asJsonString(new UserRequestDTO(1L, "Kotai", "Nalleb", "kittu1@aven-sys.com",
 						"kittu1@aven-sys.com", "$2a$10$pxSQVx/EqvfrehZDdN6Q3.Qg3Agm2S/d60xYqy0rFpuNSgt1DcpvO",
-						"9381515362", "234", 1L,"AP","india","developer",groups,true)))
+						"9381515362", "234", 1L, "AP", "india", "developer", groups, true)))
 				.contentType(MediaType.APPLICATION_JSON_VALUE).accept(MediaType.APPLICATION_JSON);
 		mockMvc.perform(request).andExpect(status().isBadRequest());
 	}
@@ -392,8 +399,7 @@ public class UserControllerTest {
 		boolean userId = false;
 		try {
 			if (user.isPresent() && !user.get().getIsDeleted()) {
-			}
-			else {
+			} else {
 				throw new ServiceException(messageSource.getMessage(MessageConstants.ERROR_USER_NOT_FOUND,
 						new Object[] { 5 }, LocaleContextHolder.getLocale()));
 			}
@@ -438,6 +444,45 @@ public class UserControllerTest {
 		userService.delete(1L);
 		mockMvc.perform(MockMvcRequestBuilders.delete("/api/user/{id}/delete", 1)).andExpect(status().isOk())
 				.andReturn();
+	}
+
+	@Test
+	void testAuthenticateUser2FA() throws Exception {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
+		ObjectWriter writer = mapper.writer().withDefaultPrettyPrinter();
+		String requestJson = writer.writeValueAsString(oTPRequestDTO);
+		RequestBuilder request = MockMvcRequestBuilders.post("/api/user/signin/2FA").content(requestJson)
+				.contentType(MediaType.APPLICATION_JSON_VALUE).accept(MediaType.APPLICATION_JSON);
+		mockMvc.perform(request).andExpect(status().isOk()).andReturn();
+	}
+
+	@Test
+	void testResendOTP() throws Exception {
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/user/signin/resendOTP")).andExpect(status().isOk())
+		.andReturn();
+	}
+
+	@Test
+	void testFirstTimeLoginResetPassword() throws Exception{
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
+		RequestBuilder request = MockMvcRequestBuilders.post("/api/user/loginResetPassword")
+				.content(asJsonString( new ResetLoginRequestDTO(1L,"password","confirmPassword")))
+				.contentType(MediaType.APPLICATION_JSON_VALUE).accept(MediaType.APPLICATION_JSON);
+		mockMvc.perform(request).andExpect(status().isCreated());
+	}
+
+	@Test
+	void testForgetPassword()throws Exception {
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/user/forget-password/{email}","nalleboina@aven-sys.com")).andExpect(status().isOk())
+		.andReturn();
+	}
+
+	@Test
+	void testValidateForgetPasswordToken() throws Exception{
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/user/validate-forget-password-token").param("token","token")).andExpect(status().isBadRequest())
+		.andReturn();
 	}
 
 }
